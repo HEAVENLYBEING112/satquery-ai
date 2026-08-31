@@ -20,3 +20,10 @@ models:
     task: optical_sar_analysis
     input_types:
       - optical_sar_pair
+
+  remote_sensing_vqa:
+    type: specialist
+    implementation: RemoteSensingVQA
+    task: single_image_vqa
+    device: auto
+    model_id: "MBZUAI/GeoChat-7B"

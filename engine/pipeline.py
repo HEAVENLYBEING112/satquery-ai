@@ -70,9 +70,12 @@ def get_demo_cases():
         {"title": "8. Invalid input (Optical-SAR with 2 optical)", "query": "Use SAR and optical.", "inputs": InputBundle(images=[optical_img_1, optical_img_2])}
     ]
 
-def run_cases(cases):
+def run_cases(cases, current_registry=None):
+    if current_registry is None:
+        current_registry = registry
+        
     planner = Planner()
-    executor = WorkflowExecutor(registry)
+    executor = WorkflowExecutor(current_registry)
     
     for tc in cases:
         try:
@@ -97,11 +100,20 @@ def main():
     parser.add_argument("--sar", type=str, help="Path to SAR image")
     parser.add_argument("--query", type=str, help="Natural language query")
     parser.add_argument("--demo", action="store_true", help="Run the Day 1 demo workflows")
+    parser.add_argument("--model", type=str, choices=["mock", "real"], default="mock", help="Model mode (mock or real)")
     
     args = parser.parse_args()
     
+    import os
+    os.environ["SATQUERY_MODEL_MODE"] = args.model
+    
+    # Reload registry if mode changed since it was loaded globally
+    from engine.agent.registry import ModelRegistry
+    global registry
+    registry = ModelRegistry()
+    
     if args.demo or len(sys.argv) == 1:
-        run_cases(get_demo_cases())
+        run_cases(get_demo_cases(), registry)
         return
         
     if not args.query:
@@ -127,7 +139,7 @@ def main():
         sys.exit(1)
         
     bundle = InputBundle(images=images)
-    run_cases([{"title": "CLI Execution", "query": args.query, "inputs": bundle}])
+    run_cases([{"title": "CLI Execution", "query": args.query, "inputs": bundle}], registry)
 
 if __name__ == "__main__":
     main()

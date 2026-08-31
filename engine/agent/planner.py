@@ -11,6 +11,10 @@ class Planner:
         task = None
         steps = []
         
+        import os
+        mode = os.getenv("SATQUERY_MODEL_MODE", "mock").lower()
+        vqa_tool = "RemoteSensingVQA" if mode == "real" else "MockVQA"
+        
         # 1. Routing logic based on query + inputs
         if inputs.image_count == 1 and not inputs.has_sar:
             if "chang" in query_lower:
@@ -25,10 +29,10 @@ class Planner:
                 steps = [WorkflowStep(tool="MockGrounding")]
             elif "visible" in query_lower or "what is" in query_lower:
                 task = TaskType.SINGLE_IMAGE_VQA
-                steps = [WorkflowStep(tool="MockVQA")]
+                steps = [WorkflowStep(tool=vqa_tool)]
             else:
                 task = TaskType.SINGLE_IMAGE_VQA
-                steps = [WorkflowStep(tool="MockVQA")]
+                steps = [WorkflowStep(tool=vqa_tool)]
                 
         elif inputs.image_count == 2 and inputs.has_optical and not inputs.has_sar:
             if "sar" in query_lower:

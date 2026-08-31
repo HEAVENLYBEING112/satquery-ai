@@ -29,14 +29,26 @@ Establish the typed, model-agnostic engine contracts and agent workflow.
 - `python -m engine.pipeline` demonstrates mandatory workflows
 
 ### Real AI Models
-Not integrated on Day 1.
+Day 3: Integrated MBZUAI/GeoChat-7B as the first real Remote Sensing Vision-Language Model.
 
 ### Known Limitations
-- Planner is rule-based
-- Specialists are mocks
+- Specialists other than VQA are still mocks
 - Confidence is not calibrated
 - No real GeoTIFF preprocessing yet
 - No frontend yet
 
 ### Next
-Integrate the first real remote-sensing capability, starting with single-image VQA.
+Integrate real temporal change models and build the frontend interface.
+
+## Day 3 — First Real Remote-Sensing VLM
+
+### Objective
+Integrate the first real remote-sensing Vision-Language Model into the existing SatQuery engine for Single-Image VQA.
+
+### Completed
+- Researched RS-VLM candidates and selected GeoChat for its open weights, VQA capability, and spatial reasoning alignment.
+- Added `RemoteSensingVQA` specialist adapter supporting standard RGB images.
+- Adapted `InputBundle` loading to parse 3-band GeoTIFFs into Pillow formats natively compatible with the VLM processor.
+- Implemented Lazy Loading and model caching to ensure tests and CPU pipelines run smoothly without massive VRAM overhead.
+- Added graceful OOM handling and dynamic mode-based routing via `SATQUERY_MODEL_MODE`.
+- Configured CLI to support explicit `--model [mock|real]` invocation.
