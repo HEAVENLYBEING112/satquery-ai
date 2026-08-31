@@ -1,0 +1,21 @@
+models:
+
+  vqa:
+    name: GeoChat
+    provider: huggingface
+    device: remote_gpu
+
+  change_detection:
+    name: ChangeFormer
+    provider: huggingface
+    device: remote_gpu
+
+  grounding:
+    name: GeoChat
+    provider: huggingface
+    device: remote_gpu
+
+  optical_sar:
+    name: SatQueryFusion
+    provider: local_or_remote
+    device: remote_gpu
