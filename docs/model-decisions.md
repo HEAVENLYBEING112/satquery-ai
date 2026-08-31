@@ -45,3 +45,18 @@ Trained on a large-scale RS multimodal dataset (images, regions, text instructio
 ### Limitations
 - Inherits LLaVA's requirement to convert multispectral GeoTIFFs to 3-channel RGB before inference. It cannot natively reason over 13-band Sentinel-2 tensors without preprocessing down to RGB.
 - Large checkpoint size (~14GB download).
+
+## 2. Temporal Change Detection & VQA
+
+### Baseline Change Detector
+For hardware accessibility and fallback, SatQuery uses a highly optimized CPU-based `BaselineChangeDetector`.
+- **Methodology**: It uses robust percentile normalization across bands, calculates absolute differences, and extracts connected morphology regions via `scipy.ndimage`. 
+- **Registration**: It relies on `rasterio.warp.reproject` to align disparate CRS inputs on the fly before raw subtraction, preserving scientific honesty (never subtracting misaligned matrices).
+- **Semantics**: It intentionally refuses to hallucinate semantic labels (e.g., "new building") for raw pixel differences.
+
+### Candidate AI Change/VQA Models
+- **ChangeChat**: Built specifically for bi-temporal remote sensing VQA, making it a strong candidate for future AI semantic change layers.
+- **CDVQA models**: Various academic models trained on the CDVQA dataset.
+- **ChangeFormer**: A transformer-based change detection architecture, though it outputs semantic segmentation masks rather than conversational text.
+
+Currently, the engine provides exact extension points (`engine/models/change_description.py` and `engine/models/change_vqa.py`) explicitly designed to integrate an AI Change Model like ChangeChat once hardware permits. Until then, it utilizes the CPU baseline detector and explicitly documents its semantic limitations to the user.

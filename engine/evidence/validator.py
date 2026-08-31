@@ -8,6 +8,14 @@ class PlanValidator:
     def validate(self, plan: WorkflowPlan, inputs: InputBundle) -> bool:
         if not plan.steps:
             raise ValidationError("Workflow plan has no steps.")
+
+        if plan.input_type == InputType.SINGLE_OPTICAL and not inputs.has_optical:
+            raise ValidationError("Plan requires optical imagery but none found in bundle.")
+        if plan.input_type == InputType.SINGLE_SAR and not inputs.has_sar:
+            raise ValidationError("Plan requires SAR imagery but none found in bundle.")
+            
+        if inputs.is_temporal:
+            self._validate_temporal_pair(inputs)
             
         # Basic count checks
         if plan.task in [TaskType.TEMPORAL_CHANGE_DETECTION, TaskType.TEMPORAL_CHANGE_DESCRIPTION, TaskType.TEMPORAL_CHANGE_VQA]:
@@ -42,6 +50,20 @@ class PlanValidator:
                     raise ValidationError(f"Optical and SAR images are incompatible: {report['reason']}")
 
         return True
+
+    def _validate_temporal_pair(self, inputs: InputBundle):
+        if inputs.image_count != 2:
+            raise ValidationError("Temporal task requires exactly 2 images.")
+            
+        before = inputs.before
+        after = inputs.after
+        
+        if before is None or after is None:
+            raise ValidationError("Could not resolve temporal ordering for inputs.")
+            
+        if before.modality != after.modality:
+            # For Day 6, we keep modalities the same for simple change detection
+            raise ValidationError("Temporal pair modalities must match (e.g. optical + optical).")
 
     def check_pair_compatibility(self, img1: Any, img2: Any) -> Dict[str, Any]:
         """Checks spatial/dimensional compatibility of two ImageAssets."""

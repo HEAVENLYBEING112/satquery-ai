@@ -64,6 +64,31 @@ class InputBundle:
     def is_cross_modal(self) -> bool:
         return len(self.modalities) > 1
 
+    @property
+    def before(self) -> Optional[ImageAsset]:
+        if not self.is_temporal:
+            return None
+        # Sort by acquisition_time if available, otherwise assume input order
+        with_time = [img for img in self.images if img.acquisition_time]
+        if len(with_time) == 2:
+            try:
+                t1 = datetime.datetime.fromisoformat(with_time[0].acquisition_time.replace("Z", "+00:00"))
+                t2 = datetime.datetime.fromisoformat(with_time[1].acquisition_time.replace("Z", "+00:00"))
+                return with_time[0] if t1 <= t2 else with_time[1]
+            except Exception:
+                pass
+        return self.images[0]
+
+    @property
+    def after(self) -> Optional[ImageAsset]:
+        if not self.is_temporal:
+            return None
+        before_img = self.before
+        for img in self.images:
+            if img.id != before_img.id:
+                return img
+        return self.images[-1]
+
     def determine_input_type(self) -> InputType:
         if self.image_count == 1:
             if self.has_optical:
@@ -101,10 +126,21 @@ class BoundingBox:
     source: str = "model"
 
 @dataclass
+class ChangeMask:
+    width: int
+    height: int
+    mask_path: Optional[str] = None
+    threshold_used: Optional[float] = None
+    changed_pixel_count: int = 0
+    changed_fraction: float = 0.0
+
+@dataclass
 class EvidenceBundle:
     textual_evidence: Optional[str] = None
     bounding_boxes: List[BoundingBox] = field(default_factory=list)
     visualizations: List[str] = field(default_factory=list)
+    change_statistics: Optional[Dict[str, Any]] = None
+    change_mask: Optional[ChangeMask] = None
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 @dataclass

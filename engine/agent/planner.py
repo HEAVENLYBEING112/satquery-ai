@@ -16,7 +16,7 @@ class Planner:
                 TaskType.SINGLE_IMAGE_VQA: "remote_sensing_vqa",
                 TaskType.SINGLE_IMAGE_CAPTION: "mock_captioner",
                 TaskType.SINGLE_IMAGE_GROUNDING: "remote_sensing_grounding",
-                TaskType.TEMPORAL_CHANGE_DETECTION: "mock_change_detector",
+                TaskType.TEMPORAL_CHANGE_DETECTION: "baseline_change_detector",
                 TaskType.TEMPORAL_CHANGE_DESCRIPTION: "mock_change_description",
                 TaskType.TEMPORAL_CHANGE_VQA: "mock_change_vqa",
                 TaskType.OPTICAL_SAR_ANALYSIS: "mock_optical_sar"
@@ -26,9 +26,9 @@ class Planner:
                 TaskType.SINGLE_IMAGE_VQA: "MockVQA",
                 TaskType.SINGLE_IMAGE_CAPTION: "MockCaptioner",
                 TaskType.SINGLE_IMAGE_GROUNDING: "MockGrounding",
-                TaskType.TEMPORAL_CHANGE_DETECTION: "MockChangeDetector",
-                TaskType.TEMPORAL_CHANGE_DESCRIPTION: "MockChangeDescription",
-                TaskType.TEMPORAL_CHANGE_VQA: "MockChangeVQA",
+                TaskType.TEMPORAL_CHANGE_DETECTION: "baseline_change_detector",
+                TaskType.TEMPORAL_CHANGE_DESCRIPTION: "mock_change_description",
+                TaskType.TEMPORAL_CHANGE_VQA: "mock_change_vqa",
                 TaskType.OPTICAL_SAR_ANALYSIS: "MockOpticalSAR"
             }
 

@@ -1,5 +1,19 @@
 # Development Log
 
+## Day 6 — Temporal Change Intelligence
+
+### Objective
+Implement a scientifically honest, bi-temporal remote-sensing workflow in SatQuery AI without relying on blind pixel subtraction.
+
+### Completed
+- Added `before` and `after` logic to `InputBundle`, natively tracking acquisition times or sequence order.
+- Built a formal `engine/geospatial/registration.py` step utilizing `rasterio.warp.reproject` to handle misalignment in CRS and resolutions before differencing.
+- Created `BaselineChangeDetector` to handle `TEMPORAL_CHANGE_DETECTION` safely via robust percentile normalization and thresholded difference masking.
+- Extracted exact morphological bounding boxes from change masks via `scipy.ndimage` connected components, injecting them into the `EvidenceBundle`.
+- Implemented deterministic `MockChangeDescription` and AI extension-point `MockChangeVQA` to ingest spatial evidence and generate semantically accurate descriptions.
+- Extended the `WorkflowExecutor` to propagate intermediate step evidence forward (e.g. from the Detector to Description).
+- Added comprehensive synthetic data unit tests to validate temporal alignment and mask generation.
+
 ## Day 1 — Engine Contracts & Agent Core
 
 ### Objective

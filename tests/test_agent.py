@@ -91,10 +91,37 @@ def test_plan_validation(opt_img, opt_img2, sar_img):
     with pytest.raises(ValidationError):
         validator.validate(plan_fusion, InputBundle(images=[opt_img, opt_img2]))
 
-def test_executor(opt_img, opt_img2):
+def test_executor(opt_img, opt_img2, tmp_path):
+    import rasterio
+    import numpy as np
+    from rasterio.transform import from_origin
+    
     executor = WorkflowExecutor(registry)
     planner = Planner()
-    
+
+    # Create dummy files so BaselineChangeDetector can run without crashing
+    b_path = str(tmp_path / "opt.tif")
+    a_path = str(tmp_path / "opt2.tif")
+    data = np.zeros((3, 10, 10), dtype=np.uint16)
+    transform = from_origin(0, 0, 10, 10)
+    for p in [b_path, a_path]:
+        with rasterio.open(
+            p, 'w', driver='GTiff', height=10, width=10, count=3,
+            dtype=data.dtype, crs='+proj=latlong', transform=transform
+        ) as dst:
+            dst.write(data)
+            
+    opt_img.path = b_path
+    opt_img2.path = a_path
+    opt_img.crs = '+proj=latlong'
+    opt_img2.crs = '+proj=latlong'
+    opt_img.width = 10
+    opt_img2.width = 10
+    opt_img.height = 10
+    opt_img2.height = 10
+    opt_img.bbox = [0, -100, 100, 0]
+    opt_img2.bbox = [0, -100, 100, 0]
+
     # Multi-step workflow test
     bundle = InputBundle(images=[opt_img, opt_img2])
     plan = planner.plan("Has built-up increased?", bundle)
@@ -104,8 +131,7 @@ def test_executor(opt_img, opt_img2):
         print([e.message for e in result.errors])
     assert result.status == "success"
     assert len(result.execution_trace) == 2
-    assert result.answer == "Built-up area increased."
-    assert result.confidence == 0.87
+    assert "I am a baseline model" in result.answer
 
 def test_executor_invalid_tool(opt_img):
     executor = WorkflowExecutor(registry)

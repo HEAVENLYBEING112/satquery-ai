@@ -57,7 +57,15 @@ class WorkflowExecutor:
                 )
 
             try:
-                result = model.run(inputs, query, step.parameters)
+                # Merge prior evidence statistics into parameters for downstream models
+                # This fulfills the requirement that CD outputs are available to VQA/Description
+                run_params = dict(step.parameters)
+                if all_evidence:
+                    last_evidence = all_evidence[-1]
+                    if last_evidence and last_evidence.change_statistics:
+                        run_params["change_statistics"] = last_evidence.change_statistics
+                
+                result = model.run(inputs, query, run_params)
             except Exception as e:
                 return self._create_error_result(
                     request_id=request_id,

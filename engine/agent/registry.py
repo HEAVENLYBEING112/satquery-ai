@@ -8,6 +8,10 @@ from engine.models.mocks import (
     MockChangeVQA, MockOpticalSAR
 )
 
+from engine.models.change_detection import BaselineChangeDetector
+from engine.models.change_description import MockChangeDescription
+from engine.models.change_vqa import MockChangeVQA
+
 class ModelRegistry:
     def __init__(self):
         self._models: Dict[str, SpecialistModel] = {}
@@ -18,7 +22,7 @@ class ModelRegistry:
         self.register(MockVQA())
         self.register(MockCaptioner())
         self.register(MockGrounding())
-        self.register(MockChangeDetector())
+        self.register(BaselineChangeDetector())
         self.register(MockChangeDescription())
         self.register(MockChangeVQA())
         self.register(MockOpticalSAR())
