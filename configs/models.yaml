@@ -1,21 +1,22 @@
 models:
 
-  vqa:
-    name: GeoChat
-    provider: huggingface
-    device: remote_gpu
+  mock_vqa:
+    type: specialist
+    task: single_image_vqa
+    input_types:
+      - single_optical
+      - single_multispectral
+      - single_sar
 
-  change_detection:
-    name: ChangeFormer
-    provider: huggingface
-    device: remote_gpu
+  mock_change_detector:
+    type: specialist
+    task: temporal_change_detection
+    input_types:
+      - temporal_optical
+      - temporal_sar
 
-  grounding:
-    name: GeoChat
-    provider: huggingface
-    device: remote_gpu
-
-  optical_sar:
-    name: SatQueryFusion
-    provider: local_or_remote
-    device: remote_gpu
+  mock_optical_sar:
+    type: specialist
+    task: optical_sar_analysis
+    input_types:
+      - optical_sar_pair

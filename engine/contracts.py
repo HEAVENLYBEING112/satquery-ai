@@ -1,0 +1,129 @@
+from enum import Enum
+from typing import List, Dict, Any, Optional
+from dataclasses import dataclass, field
+import datetime
+
+class TaskType(str, Enum):
+    SINGLE_IMAGE_VQA = "single_image_vqa"
+    SINGLE_IMAGE_CAPTION = "single_image_caption"
+    SINGLE_IMAGE_GROUNDING = "single_image_grounding"
+    TEMPORAL_CHANGE_DETECTION = "temporal_change_detection"
+    TEMPORAL_CHANGE_DESCRIPTION = "temporal_change_description"
+    TEMPORAL_CHANGE_VQA = "temporal_change_vqa"
+    OPTICAL_SAR_ANALYSIS = "optical_sar_analysis"
+
+class InputType(str, Enum):
+    SINGLE_OPTICAL = "single_optical"
+    SINGLE_MULTISPECTRAL = "single_multispectral"
+    SINGLE_SAR = "single_sar"
+    TEMPORAL_OPTICAL = "temporal_optical"
+    TEMPORAL_SAR = "temporal_sar"
+    OPTICAL_SAR_PAIR = "optical_sar_pair"
+
+@dataclass
+class ImageAsset:
+    id: str
+    path: str
+    filename: str
+    format: str
+    modality: str
+    width: Optional[int] = None
+    height: Optional[int] = None
+    bands: Optional[int] = None
+    crs: Optional[str] = None
+    resolution: Optional[float] = None
+    acquisition_time: Optional[str] = None
+    bbox: Optional[List[float]] = None
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+@dataclass
+class InputBundle:
+    images: List[ImageAsset]
+    
+    @property
+    def image_count(self) -> int:
+        return len(self.images)
+        
+    @property
+    def modalities(self) -> List[str]:
+        return list(set([img.modality.lower() for img in self.images]))
+        
+    @property
+    def has_optical(self) -> bool:
+        return "optical" in self.modalities
+        
+    @property
+    def has_sar(self) -> bool:
+        return "sar" in self.modalities
+        
+    @property
+    def is_temporal(self) -> bool:
+        return self.image_count >= 2 and len(self.modalities) == 1
+        
+    @property
+    def is_cross_modal(self) -> bool:
+        return len(self.modalities) > 1
+
+    def determine_input_type(self) -> InputType:
+        if self.image_count == 1:
+            if self.has_optical:
+                return InputType.SINGLE_OPTICAL
+            elif self.has_sar:
+                return InputType.SINGLE_SAR
+        elif self.image_count == 2:
+            if self.has_optical and not self.has_sar:
+                return InputType.TEMPORAL_OPTICAL
+            elif self.has_sar and not self.has_optical:
+                return InputType.TEMPORAL_SAR
+            elif self.has_optical and self.has_sar:
+                return InputType.OPTICAL_SAR_PAIR
+        raise ValueError("Unsupported input combination")
+
+@dataclass
+class WorkflowStep:
+    tool: str
+    parameters: Dict[str, Any] = field(default_factory=dict)
+
+@dataclass
+class WorkflowPlan:
+    task: TaskType
+    input_type: InputType
+    input_ids: List[str]
+    steps: List[WorkflowStep]
+    parameters: Dict[str, Any] = field(default_factory=dict)
+    planner_source: str = "rule_based"
+
+@dataclass
+class Evidence:
+    type: str
+    data: Dict[str, Any]
+
+@dataclass
+class SpecialistResult:
+    status: str
+    model_name: str
+    task: TaskType
+    answer: Any
+    confidence: Optional[float]
+    evidence: Evidence
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    execution_time: float = 0.0
+    error: Optional[str] = None
+
+@dataclass
+class EngineError:
+    code: str
+    message: str
+
+@dataclass
+class EngineResult:
+    request_id: str
+    status: str
+    query: str
+    task: Optional[TaskType]
+    answer: Any
+    confidence: Optional[float]
+    specialist_results: List[SpecialistResult]
+    evidence: List[Evidence]
+    execution_trace: List[Dict[str, Any]]
+    errors: List[EngineError] = field(default_factory=dict)

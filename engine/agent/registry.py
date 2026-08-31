@@ -1,6 +1,11 @@
-from typing import Dict, Type
+from typing import Dict, List, Optional
 from engine.models.base import SpecialistModel
-from engine.models.change import MockChangeDetector
+from engine.contracts import TaskType, InputBundle
+from engine.models.mocks import (
+    MockVQA, MockCaptioner, MockGrounding,
+    MockChangeDetector, MockChangeDescription,
+    MockChangeVQA, MockOpticalSAR
+)
 
 class ModelRegistry:
     def __init__(self):
@@ -8,20 +13,30 @@ class ModelRegistry:
         self._register_defaults()
 
     def _register_defaults(self):
-        # Register mock models for initial development
-        self.register("change_detector", MockChangeDetector())
+        self.register(MockVQA())
+        self.register(MockCaptioner())
+        self.register(MockGrounding())
+        self.register(MockChangeDetector())
+        self.register(MockChangeDescription())
+        self.register(MockChangeVQA())
+        self.register(MockOpticalSAR())
 
-    def register(self, name: str, model: SpecialistModel):
-        self._models[name] = model
+    def register(self, model: SpecialistModel):
+        if model.name in self._models:
+            raise ValueError(f"Model {model.name} is already registered.")
+        self._models[model.name] = model
 
-    def get_model(self, name: str) -> SpecialistModel:
+    def get(self, name: str) -> SpecialistModel:
         if name not in self._models:
             raise ValueError(f"Model {name} not found in registry.")
         return self._models[name]
 
-    def find_model_for_task(self, task: str) -> SpecialistModel:
+    def list(self) -> List[str]:
+        return list(self._models.keys())
+
+    def find_compatible_specialist(self, task: TaskType, inputs: InputBundle) -> Optional[SpecialistModel]:
         for model in self._models.values():
-            if task in model.supported_tasks:
+            if model.can_run(inputs, task):
                 return model
         return None
 
