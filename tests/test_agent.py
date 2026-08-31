@@ -1,7 +1,7 @@
 import pytest
 from engine.contracts import (
     TaskType, InputType, ImageAsset, InputBundle,
-    WorkflowPlan, WorkflowStep, Evidence
+    WorkflowPlan, WorkflowStep, EvidenceBundle
 )
 from engine.agent.planner import Planner, PlannerError
 from engine.evidence.validator import PlanValidator, ValidationError

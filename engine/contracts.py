@@ -94,9 +94,18 @@ class WorkflowPlan:
     planner_source: str = "rule_based"
 
 @dataclass
-class Evidence:
-    type: str
-    data: Dict[str, Any]
+class BoundingBox:
+    label: str
+    coordinates: List[float]
+    confidence: Optional[float] = None
+    source: str = "model"
+
+@dataclass
+class EvidenceBundle:
+    textual_evidence: Optional[str] = None
+    bounding_boxes: List[BoundingBox] = field(default_factory=list)
+    visualizations: List[str] = field(default_factory=list)
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
 @dataclass
 class SpecialistResult:
@@ -105,7 +114,7 @@ class SpecialistResult:
     task: TaskType
     answer: Any
     confidence: Optional[float]
-    evidence: Evidence
+    evidence: EvidenceBundle
     metadata: Dict[str, Any] = field(default_factory=dict)
     execution_time: float = 0.0
     error: Optional[str] = None
@@ -124,6 +133,6 @@ class EngineResult:
     answer: Any
     confidence: Optional[float]
     specialist_results: List[SpecialistResult]
-    evidence: List[Evidence]
+    evidence: List[EvidenceBundle]
     execution_trace: List[Dict[str, Any]]
     errors: List[EngineError] = field(default_factory=dict)

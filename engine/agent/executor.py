@@ -3,7 +3,7 @@ import uuid
 from typing import List, Dict, Any
 from engine.contracts import (
     WorkflowPlan, InputBundle, SpecialistResult, 
-    EngineResult, EngineError, Evidence
+    EngineResult, EngineError, EvidenceBundle
 )
 from engine.evidence.validator import PlanValidator, ValidationError
 from engine.agent.registry import ModelRegistry

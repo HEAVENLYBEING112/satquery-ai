@@ -27,7 +27,9 @@ class ModelRegistry:
         mode = os.getenv("SATQUERY_MODEL_MODE", "mock").lower()
         if mode == "real":
             from engine.models.remote_sensing_vqa import RemoteSensingVQA
+            from engine.models.remote_sensing_grounding import RemoteSensingGrounding
             self.register(RemoteSensingVQA())
+            self.register(RemoteSensingGrounding())
 
     def register(self, model: SpecialistModel):
         if model.name in self._models:
@@ -46,9 +48,13 @@ class ModelRegistry:
         mode = os.getenv("SATQUERY_MODEL_MODE", "mock").lower()
         
         # If real mode, prefer real models for the specific task if available
-        if mode == "real" and task == TaskType.SINGLE_IMAGE_VQA:
-            if "RemoteSensingVQA" in self._models:
-                model = self._models["RemoteSensingVQA"]
+        if mode == "real":
+            if task == TaskType.SINGLE_IMAGE_VQA and "remote_sensing_vqa" in self._models:
+                model = self._models["remote_sensing_vqa"]
+                if model.can_run(inputs, task):
+                    return model
+            if task == TaskType.SINGLE_IMAGE_GROUNDING and "remote_sensing_grounding" in self._models:
+                model = self._models["remote_sensing_grounding"]
                 if model.can_run(inputs, task):
                     return model
                     

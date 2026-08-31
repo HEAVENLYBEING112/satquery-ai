@@ -25,8 +25,15 @@ Every major model choice for SatQuery AI is documented here.
 - **RSGPT**: Similar architecture and parameter count (~7B), but GeoChat's dataset and grounding capabilities are slightly more aligned with our multi-task taxonomy.
 - **Prithvi**: Excellent geospatial foundation model handling arbitrary bands, but natively it is a Masked Autoencoder (MAE) and not a conversational Vision-Language Model. It would require significant custom architecture to support chat/VQA.
 
-### Hardware Requirements
-- **Preferred**: NVIDIA GPU with 16GB+ VRAM (fp16 inference) or 8GB VRAM (8-bit quantized).
+### Hardware & Configuration
+- **GPU Requirement:** Minimum 14GB VRAM for fp16 inference.
+- **Implementation:** Deployed behind `RemoteSensingVQA` and `RemoteSensingGrounding` adapters.
+- **Grounding Support:** GeoChat inherently supports grounding output as text coordinates `[ymin, xmin, ymax, xmax]` normalized to [0, 1000]. The engine intercepts this string and mathematically unpacks it into absolute pixel coordinates for the `EvidenceBundle`, enabling precise visual overlays without rewriting the VLM itself.
+
+### Adaptation Strategy
+- **Method:** LoRA (Low-Rank Adaptation) via PEFT.
+- **Targets:** `q_proj` and `v_proj` inside the attention layers.
+- **Reproducibility:** A fully reproducible hardware-aware pipeline is in `scripts/train_vqa_adapter.py`. Local execution without GPU intelligently mocks the outcome and logs limitations.
 - **CPU**: Supported but severely degraded performance.
 
 ### License

@@ -7,13 +7,34 @@ class PlannerError(Exception):
 class Planner:
     def plan(self, query: str, inputs: InputBundle) -> WorkflowPlan:
         """Creates a structured plan from a query and input bundle."""
+        # Check global environment toggle.
+        # If user passes --model real, we override tools with actual implementations
+        import os
+        mode = os.getenv("SATQUERY_MODEL_MODE", "mock").lower()
+        if mode == "real":
+            task_to_tool = {
+                TaskType.SINGLE_IMAGE_VQA: "remote_sensing_vqa",
+                TaskType.SINGLE_IMAGE_CAPTION: "mock_captioner",
+                TaskType.SINGLE_IMAGE_GROUNDING: "remote_sensing_grounding",
+                TaskType.TEMPORAL_CHANGE_DETECTION: "mock_change_detector",
+                TaskType.TEMPORAL_CHANGE_DESCRIPTION: "mock_change_description",
+                TaskType.TEMPORAL_CHANGE_VQA: "mock_change_vqa",
+                TaskType.OPTICAL_SAR_ANALYSIS: "mock_optical_sar"
+            }
+        else:
+            task_to_tool = {
+                TaskType.SINGLE_IMAGE_VQA: "MockVQA",
+                TaskType.SINGLE_IMAGE_CAPTION: "MockCaptioner",
+                TaskType.SINGLE_IMAGE_GROUNDING: "MockGrounding",
+                TaskType.TEMPORAL_CHANGE_DETECTION: "MockChangeDetector",
+                TaskType.TEMPORAL_CHANGE_DESCRIPTION: "MockChangeDescription",
+                TaskType.TEMPORAL_CHANGE_VQA: "MockChangeVQA",
+                TaskType.OPTICAL_SAR_ANALYSIS: "MockOpticalSAR"
+            }
+
         query_lower = query.lower()
         task = None
         steps = []
-        
-        import os
-        mode = os.getenv("SATQUERY_MODEL_MODE", "mock").lower()
-        vqa_tool = "RemoteSensingVQA" if mode == "real" else "MockVQA"
         
         # 1. Routing logic based on query + inputs
         if inputs.image_count == 1 and not inputs.has_sar:
@@ -23,39 +44,34 @@ class Planner:
                 raise PlannerError("SAR image required but only optical found.")
             elif "describe" in query_lower:
                 task = TaskType.SINGLE_IMAGE_CAPTION
-                steps = [WorkflowStep(tool="MockCaptioner")]
+                steps.append(WorkflowStep(tool=task_to_tool[task]))
             elif "highlight" in query_lower or "ground" in query_lower:
                 task = TaskType.SINGLE_IMAGE_GROUNDING
-                steps = [WorkflowStep(tool="MockGrounding")]
+                steps.append(WorkflowStep(tool=task_to_tool[task]))
             elif "visible" in query_lower or "what is" in query_lower:
                 task = TaskType.SINGLE_IMAGE_VQA
-                steps = [WorkflowStep(tool=vqa_tool)]
+                steps.append(WorkflowStep(tool=task_to_tool[task]))
             else:
                 task = TaskType.SINGLE_IMAGE_VQA
-                steps = [WorkflowStep(tool=vqa_tool)]
+                steps.append(WorkflowStep(tool=task_to_tool[task]))
                 
-        elif inputs.image_count == 2 and inputs.has_optical and not inputs.has_sar:
-            if "sar" in query_lower:
-                raise PlannerError("SAR image required but only optical found.")
-            elif "what changed" in query_lower and "describe" not in query_lower and "vqa" not in query_lower:
-                task = TaskType.TEMPORAL_CHANGE_DESCRIPTION
-                steps = [WorkflowStep(tool="MockChangeDescription")]
-            elif "describe" in query_lower and "change" in query_lower:
-                task = TaskType.TEMPORAL_CHANGE_DESCRIPTION
-                steps = [WorkflowStep(tool="MockChangeDescription")]
-            elif "change" in query_lower or "increased" in query_lower or "decreased" in query_lower:
-                task = TaskType.TEMPORAL_CHANGE_VQA
-                steps = [
-                    WorkflowStep(tool="MockChangeDetector"),
-                    WorkflowStep(tool="MockChangeVQA")
-                ]
+        elif inputs.image_count == 2 and not inputs.has_sar:
+            if "chang" in query_lower:
+                if "what" in query_lower or "describe" in query_lower:
+                    task = TaskType.TEMPORAL_CHANGE_DESCRIPTION
+                    steps.append(WorkflowStep(tool=task_to_tool[TaskType.TEMPORAL_CHANGE_DETECTION]))
+                    steps.append(WorkflowStep(tool=task_to_tool[task]))
+                else:
+                    task = TaskType.TEMPORAL_CHANGE_DETECTION
+                    steps.append(WorkflowStep(tool=task_to_tool[task]))
             else:
-                task = TaskType.TEMPORAL_CHANGE_DETECTION
-                steps = [WorkflowStep(tool="MockChangeDetector")]
+                task = TaskType.TEMPORAL_CHANGE_VQA
+                steps.append(WorkflowStep(tool=task_to_tool[TaskType.TEMPORAL_CHANGE_DETECTION]))
+                steps.append(WorkflowStep(tool=task_to_tool[task]))
                 
         elif inputs.has_optical and inputs.has_sar:
             task = TaskType.OPTICAL_SAR_ANALYSIS
-            steps = [WorkflowStep(tool="MockOpticalSAR")]
+            steps.append(WorkflowStep(tool=task_to_tool[task]))
         
         if task is None:
             raise PlannerError("Could not determine a valid task for the given query and inputs.")

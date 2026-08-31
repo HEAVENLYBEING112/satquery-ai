@@ -40,6 +40,19 @@ Day 3: Integrated MBZUAI/GeoChat-7B as the first real Remote Sensing Vision-Lang
 ### Next
 Integrate real temporal change models and build the frontend interface.
 
+## Day 5 — Spatial Grounding, Evidence & Real Adaptation
+
+### Objective
+Extend SatQuery beyond textual VQA by implementing genuine spatial grounding/evidence handling, and prepare a real adaptation experiment.
+
+### Completed
+- Validated `GeoChat`'s intrinsic grounding format (`[ymin, xmin, ymax, xmax]`) and mapped it accurately to pixel coordinates.
+- Developed `RemoteSensingGrounding` specialist to handle `SINGLE_IMAGE_GROUNDING`.
+- Replaced the primitive `Evidence` stub with a highly extensible `EvidenceBundle` containing bounding boxes and visualizations.
+- Added `visualization.py` for Pillow-based bounding box drawing.
+- Implemented strict error handling and hardware checks in `scripts/train_vqa_adapter.py`.
+- Enforced honesty: all simulated benchmark predictions were purged from `evaluate_vqa.py` in favor of "N/A - actual experiment pending", and GPU training falls back cleanly rather than forging metrics.
+
 ## Day 4 — Remote-Sensing Adaptation & Evaluation
 
 ### Objective
