@@ -100,12 +100,17 @@ def main():
     parser.add_argument("--sar", type=str, help="Path to SAR image")
     parser.add_argument("--query", type=str, help="Natural language query")
     parser.add_argument("--demo", action="store_true", help="Run the Day 1 demo workflows")
-    parser.add_argument("--model", type=str, choices=["mock", "real"], default="mock", help="Model mode (mock or real)")
+    parser.add_argument("--model", type=str, choices=["mock", "real", "adapted"], default="mock", help="Model mode (mock, real, adapted)")
     
     args = parser.parse_args()
     
     import os
-    os.environ["SATQUERY_MODEL_MODE"] = args.model
+    if args.model in ["real", "adapted"]:
+        os.environ["SATQUERY_MODEL_MODE"] = "real"
+        if args.model == "adapted":
+            os.environ["SATQUERY_VQA_ADAPTER"] = "experiments/vqa_lora/adapter"
+    else:
+        os.environ["SATQUERY_MODEL_MODE"] = "mock"
     
     # Reload registry if mode changed since it was loaded globally
     from engine.agent.registry import ModelRegistry

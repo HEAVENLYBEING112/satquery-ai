@@ -40,6 +40,19 @@ Day 3: Integrated MBZUAI/GeoChat-7B as the first real Remote Sensing Vision-Lang
 ### Next
 Integrate real temporal change models and build the frontend interface.
 
+## Day 4 — Remote-Sensing Adaptation & Evaluation
+
+### Objective
+Establish a reproducible training (LoRA/PEFT) and evaluation pipeline for the RS-VLM on datasets like RSVQA and BigEarthNet.
+
+### Completed
+- Corrected the GeoTIFF RGB extraction bug from Day 3 to use sensor-aware indices (e.g. Sentinel-2 L1C uses 4,3,2 for RGB rather than blindly grabbing 1,2,3).
+- Added formal dataset adapters and manifesting strategy (`engine/data/`).
+- Added evaluation script (`scripts/evaluate_vqa.py`) to systematically compare base vs adapted performance.
+- Added training script (`scripts/train_vqa_adapter.py`) using LoRA PEFT.
+- Updated `.gitignore` to prevent any model weights, tensors, or massive datasets from accidentally being committed.
+- Prevented hardware exhaustion by formalizing offline/GPU processing and keeping inference logic decoupled.
+
 ## Day 3 — First Real Remote-Sensing VLM
 
 ### Objective

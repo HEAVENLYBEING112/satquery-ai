@@ -21,9 +21,18 @@ models:
     input_types:
       - optical_sar_pair
 
-  remote_sensing_vqa:
+  geochat_base:
     type: specialist
     implementation: RemoteSensingVQA
     task: single_image_vqa
     device: auto
     model_id: "MBZUAI/GeoChat-7B"
+    adapter: null
+
+  geochat_adapted:
+    type: specialist
+    implementation: RemoteSensingVQA
+    task: single_image_vqa
+    device: auto
+    model_id: "MBZUAI/GeoChat-7B"
+    adapter: "experiments/vqa_lora/adapter"
