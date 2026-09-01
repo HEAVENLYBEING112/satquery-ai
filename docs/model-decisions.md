@@ -5,7 +5,6 @@ Every major model choice for SatQuery AI is documented here.
 ## 1. Single-Image VQA (Remote Sensing VLM)
 
 ### Candidate models
-────────────────────────────
 * **GeoChat** (MBZUAI)
 * **RSGPT** (Remote Sensing Generative Pre-trained Transformer)
 * **Prithvi** (NASA/IBM - mostly an encoder foundation model, requires custom heads for VQA)
