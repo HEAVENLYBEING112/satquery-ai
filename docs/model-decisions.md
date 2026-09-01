@@ -73,3 +73,12 @@ SatQuery currently employs a deterministic OpticalSARSpecialist.
 - **Heuristics**: Extracts water (low optical reflection, low SAR backscatter) and built-up areas (high optical reflection, high SAR backscatter via double-bounce).
 - **Evidence**: Explicitly calculates agreement and disagreement regions between modalities, enforcing the requirement that both sensors contribute meaningfully to the final answer without fabricating fake fusion textual responses.
 - **Future Work**: Replace with a true cross-modal Vision-Language Model that natively ingests co-registered Optical and SAR tensors.
+
+### AI Integration Strategy
+- **Research inspiration**: CROMA (Contrastive Remote Sensing Representations with Multispectral and SAR)
+- **Implemented component**: Custom OpticalSARAI dual-encoder adapter prototype
+- **Pretrained CROMA weights**: NOT currently used
+- **Real AI inference**: NOT yet executed in the current low-spec environment (safely intercepted by lazy loading)
+- **Deterministic fallback**: OpticalSARSpecialist
+
+The OpticalSARAI implementation serves as a dual-encoder model architecture/prototype. It correctly handles the modality-specific inputs and early-fusion logic but does NOT claim to run trained benchmark performance in the local environment without downloading real weights to a capable GPU.

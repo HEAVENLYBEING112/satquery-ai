@@ -23,10 +23,17 @@
 | **Dual-Branch ResNet (Baseline)** | Yes | Yes | Classification | Yes (Various repos) | BigEarthNet-MM | Open | ~2-4 GB | Low | **Yes** - Simple early/late fusion baseline. |
 | **K-Radar / SAR-Opt Fusion** | Yes | Yes | Object Detection | Yes | Various | Academic | ~8 GB | High | **No** - Highly specific to automotive/drone radar rather than satellite SAR. |
 
-## 3. Selected Model: CROMA-Architecture Dual-Encoder (Classification / Feature Extraction)
-We select a lightweight **Dual-Encoder Architecture** inspired by CROMA and standard BigEarthNet-MM fusion baselines. 
+## 3. Selected Model Integration Strategy
+We select a lightweight **Dual-Encoder Architecture prototype** inspired by CROMA and standard BigEarthNet-MM fusion baselines. 
 Since genuine VLMs (like GeoChat) do not natively ingest co-registered SAR+Optical without crushing them into fake RGB patches, a two-stage architecture is scientifically necessary:
 1. **Fusion Representation**: Optical Encoder (ViT/CNN) + SAR Encoder (ViT/CNN) -> Cross-Attention / Concatenation.
 2. **Reasoning Layer**: A classification head maps the joint embeddings to semantic labels (e.g., Water, Built-up).
+
+**Important Architecture Note**: 
+* **Research inspiration**: CROMA
+* **Implemented component**: Custom `OpticalSARAI` dual-encoder adapter prototype
+* **Pretrained CROMA weights**: NOT currently used
+* **Real AI inference**: NOT yet executed in the current low-spec environment (gracefully skipped by lazy-loading)
+* **Deterministic fallback**: `OpticalSARSpecialist`
 
 This cleanly aligns with our taxonomy (`CROSS_MODAL_OPTICAL_SAR`) while preserving the mathematical integrity of the SAR bands (dB scale) and Optical bands (reflectance).
