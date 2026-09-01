@@ -992,7 +992,7 @@ def build_input_bundle(request, asset_store, job_output_dir):
             path=server_path,
             filename=stored["filename"],
             format=stored.get("format", "GeoTIFF"),
-            modality=asset_ref.modality,
+            modality="optical" if asset_ref.modality == "multispectral" else asset_ref.modality,
             width=stored.get("width"),
             height=stored.get("height"),
             bands=stored.get("bands"),
@@ -1307,13 +1307,13 @@ def invoke_engine(job_id, request, asset_store, job_store, settings):
 
         if engine_thread.is_alive():
             # Thread continues running in background because Python threads
-            # cannot be safely force-killed. The job is marked failed.
-            # To prevent the zombie thread from concurrently modifying SATQUERY_OUTPUT_DIR
-            # or competing for VRAM on a subsequent job, we explicitly block the worker
-            # thread indefinitely until the engine exits, or a process restart occurs.
+            # cannot be safely force-killed. We mark the job as failed immediately
+            # so the client gets a response, then intentionally block the worker thread
+            # indefinitely to prevent resource contention or SATQUERY_OUTPUT_DIR corruption.
+            job_store.update(job_id, status="failed", error_message="ENGINE_TIMEOUT: Job exceeded time limit.")
             logger.critical("ENGINE_TIMEOUT: Job timed out. Worker thread blocked to prevent resource contention.")
             engine_thread.join()
-            raise TimeoutError("ENGINE_TIMEOUT: Job exceeded time limit.")
+            return  # Worker eventually finishes, but job is already failed
         
         if err_container:
             raise err_container[0]
@@ -1889,9 +1889,9 @@ fix(backend): coerce errors dict to list
 
 ## 40. Merge Contract
 
-feat/backend is merge-ready when ALL pass:
+The final `feat/backend` implementation must satisfy all of the following requirements before it can be merged:
 
-1. All 107 backend acceptance criteria pass
+1. All backend acceptance criteria defined in Section 36 pass
 2. Engine acceptance tests pass with no changes to engine/
 3. git diff --name-only origin/feat/backend | grep engine/ returns empty
 4. git diff --name-only origin/feat/backend | grep frontend/ returns empty
