@@ -1497,14 +1497,7 @@ Every filename from clients passes through sanitize_evidence_filename() and is v
 
 ### 32.3 Malicious TIFF Handling
 
-```python
-try:
-    with rasterio.open(filepath) as src:
-        ...
-except Exception as e:
-    logger.warning(f"Rasterio failed: {e}")
-    # Continue with null metadata — do not crash
-```
+Files are rigorously validated by `rasterio.open()`. If parsing fails, the upload is immediately deleted and 400 CORRUPT_FILE is returned. This prevents downstream engine crashes.
 
 ### 32.4 Resource Exhaustion
 
@@ -1943,8 +1936,8 @@ feat/backend is merge-ready when ALL pass:
 | 404 on evidence URL | Engine wrote to outputs/ | Fix SATQUERY_OUTPUT_DIR |
 | 400 on corrupted TIFF | rasterio raises | Validate readability and return 400 CORRUPT_FILE |
 | Frontend CORS error | Origin not in allowed list | Add http://localhost:5173 to CORS_ORIGINS |
-| Job stuck running | Timeout not triggering | Verify run_with_timeout implementation |
-| engine/models/ not on engine-core remote | Expected — see Section 5 | Use local working copy |
+| Job stuck running | Timeout not triggering | Verify Thread and join timeout implementation |
+| engine/models/ not on engine-core remote | Expected — see Section 5 | Await project lead resolution for CI merge |
 
 ---
 
