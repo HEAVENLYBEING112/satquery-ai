@@ -132,3 +132,18 @@ Upgrade the optical-SAR baseline toward a remote-sensing multimodal AI capable o
 - Created standalone evaluation script scripts/evaluate_optical_sar.py.
 - Enforced strict sensor preprocessing (dB/percentiles) before AI ingestion.
 - Added comprehensive unit tests and documented architectural design logic.
+
+## Day 9 — Real Pretrained CROMA Integration
+
+### Objective
+Replace the architectural placeholder from Day 8 with a real, authoritative pretrained CROMA representation model for optical-SAR data.
+
+### Completed
+- Conducted forensic audit proving the Day 8 custom Dual-Encoder prototype had random weights and lacked training.
+- Deprecated and removed the OpticalSARAI random-weights placeholder to enforce strict scientific integrity.
+- Built a new CROMASpecialist adapter mapped to BiliSakura/CROMA-transformers via Hugging Face.
+- Validated specific band inputs (12 channels for Sentinel-2, 2 channels for Sentinel-1) preventing silent ingestion of incompatible datasets (like RGB-only VLM wrappers).
+- Extracted and safely routed the 768-dimensional joint_GAP cross-modal embedding.
+- Structured an explicit EvidenceBundle specifically for AI Representations.
+- Retained the OpticalSARSpecialist fallback layer to ensure the engine runs flawlessly on low-spec environments lacking PyTorch or the CROMA weights.
+- Implemented diagnostic scripts (check_croma.py, smoke_test_croma.py) to verify hardware availability without crashing.

@@ -75,10 +75,13 @@ SatQuery currently employs a deterministic OpticalSARSpecialist.
 - **Future Work**: Replace with a true cross-modal Vision-Language Model that natively ingests co-registered Optical and SAR tensors.
 
 ### AI Integration Strategy
-- **Research inspiration**: CROMA (Contrastive Remote Sensing Representations with Multispectral and SAR)
-- **Implemented component**: Custom OpticalSARAI dual-encoder adapter prototype
-- **Pretrained CROMA weights**: NOT currently used
-- **Real AI inference**: NOT yet executed in the current low-spec environment (safely intercepted by lazy loading)
-- **Deterministic fallback**: OpticalSARSpecialist
+- **Previous implementation**: CROMA-inspired random Conv2D prototype (now deprecated and removed from registry).
+- **Current implementation**: Pretrained CROMA adapter (`engine/models/croma.py`) utilizing the Hugging Face Transformers-compatible representation model (`BiliSakura/CROMA-transformers`).
+- **CROMA checkpoint**: Base checkpoint (`CROMA-base`) configured via Hugging Face Hub.
+- **Weights**: Loaded dynamically at runtime (cached in `.cache/huggingface`); never committed to the repository.
+- **Training**: None performed by us. The foundation model is purely pretrained using Contrastive Radar-Optical Masked Autoencoders (NeurIPS 2023).
+- **Downstream task**: The adapter currently extracts the `joint_GAP` (Global Average Pooling) representation. An untrained lightweight placeholder classifier acts as a downstream reasoning stub until a specific classification head is trained.
+- **Hardware**: The adapter checks for CUDA/Torch and gracefully delegates to the fallback if the dependencies or weights are unavailable (e.g., on low-spec developer laptops).
+- **Real inference**: YES (when hardware is available, produces real 768-d joint embeddings). NO (when hardware falls back, produces deterministic heuristic bounding boxes).
 
-The OpticalSARAI implementation serves as a dual-encoder model architecture/prototype. It correctly handles the modality-specific inputs and early-fusion logic but does NOT claim to run trained benchmark performance in the local environment without downloading real weights to a capable GPU.
+The `CROMASpecialist` adapter correctly aligns the mandatory 12-channel Sentinel-2 optical input with the 2-channel Sentinel-1 SAR input, scales them to match the expected domain, and generates cross-modal representations.

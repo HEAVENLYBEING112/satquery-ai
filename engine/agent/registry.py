@@ -10,7 +10,6 @@ from engine.models.change_detection import BaselineChangeDetector
 from engine.models.change_description import MockChangeDescription
 from engine.models.change_vqa import MockChangeVQA
 from engine.models.optical_sar import OpticalSARSpecialist
-from engine.models.optical_sar_ai import OpticalSARAI
 
 class ModelRegistry:
     def __init__(self):
@@ -32,16 +31,19 @@ class ModelRegistry:
             self.register(RemoteSensingGrounding())
             
             # AI Optical-SAR Registration with Graceful Fallback
-            ai_model = OpticalSARAI()
+            from engine.models.croma import CROMASpecialist
+            ai_model = CROMASpecialist()
             try:
                 # Test lazy initialization safely if required by hardware
                 import torch
+                # Only register if weights are found or we allow dynamic downloading
+                # For safety, we just register it; the executor handles runtime fallback 
+                # if lazy load fails. But let's check basic torch first.
                 self.register(ai_model)
             except ImportError:
                 print("PyTorch not found. Falling back to deterministic OpticalSARSpecialist.")
                 fallback_model = OpticalSARSpecialist()
-                # Alias the fallback model to the AI name so planner routes cleanly
-                self._models["OpticalSARAI_DualEncoder"] = fallback_model
+                self._models["croma_specialist"] = fallback_model
         else:
             self.register(OpticalSARSpecialist())
 
