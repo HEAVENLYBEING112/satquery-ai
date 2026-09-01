@@ -1,4 +1,0 @@
-rasterio
-numpy
-Pillow
-pyproj
