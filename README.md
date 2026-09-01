@@ -22,9 +22,7 @@ The frontend is responsible for providing an intuitive interface through which u
 
 ## 👨‍💻 Frontend Developer
 
-**Developer:** `SUJAN`
-
-> Replace the placeholder above with the assigned frontend developer's name.
+**Developer:** `Sujan`
 
 The developer is responsible for implementing the frontend according to the official Frontend Software Requirements Specification (SRS).
 
