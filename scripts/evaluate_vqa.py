@@ -22,18 +22,10 @@ def main():
     print(f"Output: {args.output}")
     print()
     
-    # Mocking evaluation for Day 4 because running a real evaluation on a 7B model
-    # across a dataset requires significant GPU hours.
+    # Removing all simulated accuracy claims to maintain strict scientific honesty.
+    # Evaluation requires actual GPU pipeline integration.
     
-    base_accuracy = 0.52
-    adapted_accuracy = 0.58
-    
-    if args.model == "base":
-        accuracy = base_accuracy
-    elif args.model == "adapted":
-        accuracy = adapted_accuracy
-    else:
-        accuracy = 0.99 # Mock
+    accuracy = "N/A — experiment not executed"
         
     result = {
         "dataset": args.manifest,

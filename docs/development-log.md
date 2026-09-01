@@ -162,3 +162,19 @@ Implement the smallest scientifically defensible downstream task to convert the 
 - Registered a dedicated CROMA_CLASSIFICATION capability in the planner, routing requests like 'classify this area' directly to the representations.
 - Preserved the deterministic OpticalSARSpecialist fallback layer ensuring flawless execution locally.
 - Retained absolute honesty: Training status clearly marked as 'PENDING HARDWARE/DATA' with zero fabricated metrics.
+
+## Day 11 — Real Dataset & Evaluation Readiness
+
+### Objective
+Finalize the downstream pipeline architecture for scientific evaluation without polluting local machines with large dataset downloads. Ensure the complete chain (Data -> CROMA -> LinearProbe -> Metrics -> Tile Evidence) is fully modeled and scientifically honest.
+
+### Completed
+- Conducted full repository audit targeting false claims. Erased legacy mock VQA accuracies ('0.52', '0.58') and replaced them with explicit 'N/A - experiment not executed'.
+- Verified CROMA requirements: Enforced 12-band Sentinel-2, 2-band Sentinel-1, and 768-d joint representations.
+- Formalized BigEarthNet-MM as the primary multimodal evaluation dataset mapped to binary 'Water/Built-up' patch extraction.
+- Developed the check_gpu.py hardware diagnostic to block unverified resource consumption.
+- Developed the real evaluate_croma.py script containing a strict pipeline that outputs N/A if authentic execution is physically blocked.
+- Designed the ablation architecture (Optical-only vs SAR-only vs Joint) establishing a measurable method to prove cross-modal superiority.
+- Implemented mathematical spatial evidence derivation: classifying a patch now legally maps the image's coordinate bounding box into the evidence layer rather than fabricating pixel masks.
+- Verified system fallback continuity (CROMA failure -> OpticalSARSpecialist -> EngineResult).
+- Successfully closed all Day 11 objectives maintaining strict scientific integrity.

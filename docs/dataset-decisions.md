@@ -1,17 +1,22 @@
 # Dataset Decisions
 
-## BigEarthNet
+## Selected Primary Dataset: BigEarthNet-MM
+The primary dataset selected for multimodal adaptation is **BigEarthNet-MM** (Multi-modal).
 
-**Source**: TU Berlin / BigEarthNet archive.
-**Format**: 590,326 Sentinel-2 image patches with multi-label land-cover annotations.
-**Text Modality**: True human-annotated captions are not natively present in the raw BigEarthNet archive. However, research such as **BigEarthNet-MM** (or BigEarthNet-CLIP) synthesizes textual descriptions from the multi-label annotations to enable Vision-Language adaptation.
-**Adaptation Strategy**: For adaptation, we synthesize VQA pairs from the land-cover labels (e.g., "What land cover types are present?" -> "Mixed forest, arable land."). The raw labels serve as our BigEarthNet.txt equivalent representation.
+### Rationale
+- **Modality Support**: Provides perfectly paired Sentinel-1 (SAR) and Sentinel-2 (Optical) patches.
+- **Labels**: Offers rich land-cover classifications derived from Corine Land Cover (CLC) 2018.
+- **Scale**: Massive dataset (>500,000 patches) spanning 10 European countries.
+- **Compatibility**: The Sentinel-2 bands (12 channels) and Sentinel-1 bands (VV/VH) align exactly with the pre-training conditions of our foundational representation model (CROMA).
 
-## RSVQA / RSVQAxBEN
-**Source**: RSVQA repository.
-**Task**: Single-Image VQA. Provides real yes/no, counting, and land-cover questions.
-**Splits**: Official train, val, and test splits (split IDs).
-**Usage**: We strictly adhere to the official test splits for evaluation. RSVQA provides exactly what we need to evaluate VQA performance without contaminating training.
+### Adaptation for Day 10/11 Pipeline
+BigEarthNet-MM natively supports multi-label classification.
+For the initial downstream task, we map the complex CLC labels to a binary task: **Water** and **Built-up**.
+- "Continuous urban fabric" / "Discontinuous urban fabric" -> Built-up
+- "Water bodies" / "Sea and ocean" -> Water
 
-## VRSBench / CDVQA
-**Usage**: Held in reserve for change detection (CDVQA) and dense grounding (VRSBench) in future milestones.
+### Storage and Local Execution Strategy
+**Constraint**: Local developer environments lack the storage (~65GB) and GPU to train this pipeline locally.
+**Implementation**: 
+- A tiny synthetic subset (fixtures) is used for validating the `DatasetManifest` parser, inference pipeline, and classifier architecture.
+- Real execution scripts (`evaluate_croma.py`, `train_croma_head.py`) strictly bypass processing and report "PENDING HARDWARE/DATA" unless explicitly run on a configured GPU cluster with the manifest present.

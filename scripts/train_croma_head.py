@@ -63,8 +63,8 @@ def train_croma_head(is_synthetic=True, epochs=5, batch_size=32, lr=1e-3):
     print(f"Device: {device}")
     
     if is_synthetic:
-        print("\n[WARNING] Using synthetic data to validate training pipeline.")
-        print("This does NOT produce a scientifically valid trained model.")
+        print("\n[WARNING] Using synthetic data for script functionality check. (synthetic validation)")
+        print("This does NOT produce a scientifically valid trained model. Metrics below are random.")
         X_train, y_train = generate_synthetic_cache(800, embedding_dim)
         X_val, y_val = generate_synthetic_cache(200, embedding_dim)
     else:
