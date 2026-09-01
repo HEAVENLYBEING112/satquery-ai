@@ -11,6 +11,7 @@ class TaskType(str, Enum):
     TEMPORAL_CHANGE_DESCRIPTION = "temporal_change_description"
     TEMPORAL_CHANGE_VQA = "temporal_change_vqa"
     CROSS_MODAL_OPTICAL_SAR = "cross_modal_optical_sar"
+    CROMA_CLASSIFICATION = "croma_classification"
 
 class InputType(str, Enum):
     SINGLE_OPTICAL = "single_optical"

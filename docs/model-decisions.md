@@ -85,3 +85,13 @@ SatQuery currently employs a deterministic OpticalSARSpecialist.
 - **Real inference**: YES (when hardware is available, produces real 768-d joint embeddings). NO (when hardware falls back, produces deterministic heuristic bounding boxes).
 
 The `CROMASpecialist` adapter correctly aligns the mandatory 12-channel Sentinel-2 optical input with the 2-channel Sentinel-1 SAR input, scales them to match the expected domain, and generates cross-modal representations.
+### CROMA Downstream Task
+
+CROMA is a pretrained representation model. It does not directly perform natural-language VQA or specific geospatial predictions natively. Therefore, a lightweight downstream classification head is required for task-specific predictions.
+
+- **Selected Task**: Water/Built-up Tile Classification
+- **Dataset**: BigEarthNet-MM (Multi-modal Sentinel-1/Sentinel-2 patches)
+- **Classifier**: `LinearProbe` (768-d joint embedding → 2 classes)
+- **Training Status**: PENDING DATA/HARDWARE (Awaiting remote execution with full dataset)
+- **Metrics**: N/A - Experiment not executed locally due to hardware constraints.
+- **Limitations**: The model currently predicts patch-level classes. It does not produce pixel-level bounding boxes natively without an explicit spatial segmentation head.

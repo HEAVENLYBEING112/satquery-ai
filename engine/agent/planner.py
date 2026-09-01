@@ -19,7 +19,8 @@ class Planner:
                 TaskType.TEMPORAL_CHANGE_DETECTION: "baseline_change_detector",
                 TaskType.TEMPORAL_CHANGE_DESCRIPTION: "mock_change_description",
                 TaskType.TEMPORAL_CHANGE_VQA: "mock_change_vqa",
-                TaskType.CROSS_MODAL_OPTICAL_SAR: "croma_specialist"
+                TaskType.CROSS_MODAL_OPTICAL_SAR: "croma_specialist",
+                TaskType.CROMA_CLASSIFICATION: "croma_specialist"
             }
         else:
             task_to_tool = {
@@ -29,7 +30,8 @@ class Planner:
                 TaskType.TEMPORAL_CHANGE_DETECTION: "baseline_change_detector",
                 TaskType.TEMPORAL_CHANGE_DESCRIPTION: "mock_change_description",
                 TaskType.TEMPORAL_CHANGE_VQA: "mock_change_vqa",
-                TaskType.CROSS_MODAL_OPTICAL_SAR: "optical_sar_specialist"
+                TaskType.CROSS_MODAL_OPTICAL_SAR: "optical_sar_specialist",
+                TaskType.CROMA_CLASSIFICATION: "croma_specialist"
             }
 
         query_lower = query.lower()
@@ -69,8 +71,11 @@ class Planner:
                 steps.append(WorkflowStep(tool=task_to_tool[TaskType.TEMPORAL_CHANGE_DETECTION]))
                 steps.append(WorkflowStep(tool=task_to_tool[task]))
                 
-        elif inputs.has_optical and inputs.has_sar:
-            task = TaskType.CROSS_MODAL_OPTICAL_SAR
+        if inputs.has_optical and inputs.has_sar:
+            if "classify" in query_lower or "land-cover" in query_lower or "identify water" in query_lower:
+                task = TaskType.CROMA_CLASSIFICATION
+            else:
+                task = TaskType.CROSS_MODAL_OPTICAL_SAR
             steps.append(WorkflowStep(tool=task_to_tool[task]))
         
         if task is None:

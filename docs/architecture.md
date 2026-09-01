@@ -57,26 +57,24 @@ flowchart TD
 flowchart TD
     A["Cross-Modal Query"] --> B["Planner"]
     B --> C["Pair Validator"]
-    C --> D["Registration / Alignment"]
-
-    D --> E["Optical Preprocessor\n12-band Sentinel-2"]
-    D --> F["SAR Preprocessor\n2-band Sentinel-1"]
-
-    E --> G["CROMA Optical Encoder"]
-    F --> H["CROMA SAR Encoder"]
-
-    G --> I["Joint Encoder"]
+    C --> D["Registration"]
+    
+    D --> E["Optical Preprocessor"]
+    D --> F["SAR Preprocessor"]
+    
+    E --> G["Sentinel-2 Representation"]
+    F --> H["Sentinel-1 Representation"]
+    
+    G --> I["Pretrained CROMA"]
     H --> I
-
+    
     I --> J["Joint Embedding"]
-    J --> K["Downstream Task Head"]
-    K --> L["Evidence"]
+    J --> K["Lightweight Task Head"]
+    K --> L["Spatial Evidence"]
     L --> M["EngineResult"]
-
-    G -.-> N["CROMA unavailable"]
-    H -.-> N
-    N -.-> O["OpticalSARSpecialist\nDeterministic Baseline"]
-    O --> L
+    
+    I -. "Unavailable" .-> N["OpticalSARSpecialist"]
+    N --> L
 ```
 
 ### Cross-Modal Workflow Explanation

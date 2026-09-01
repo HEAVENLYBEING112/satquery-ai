@@ -147,3 +147,18 @@ Replace the architectural placeholder from Day 8 with a real, authoritative pret
 - Structured an explicit EvidenceBundle specifically for AI Representations.
 - Retained the OpticalSARSpecialist fallback layer to ensure the engine runs flawlessly on low-spec environments lacking PyTorch or the CROMA weights.
 - Implemented diagnostic scripts (check_croma.py, smoke_test_croma.py) to verify hardware availability without crashing.
+
+## Day 10 — CROMA Downstream Geospatial Intelligence
+
+### Objective
+Implement the smallest scientifically defensible downstream task to convert the real CROMA representation into useful cross-modal information without fabricating an end-to-end VQA model on low-spec hardware.
+
+### Completed
+- Inspected CROMA output: extracted 768-dimensional joint_GAP embedding.
+- Selected Task: Water / Built-up Classification as the initial target MVP.
+- Prepared CROMADownstreamClassifier using a LinearProbe structure (frozen representation, trainable head).
+- Explicitly documented that this classifier produces patch-level classification, not native pixel-level bounding boxes.
+- Implemented scripts/train_croma_head.py supporting cached embeddings and safe hardware fallbacks to ensure local CI validation without 60GB dataset downloads.
+- Registered a dedicated CROMA_CLASSIFICATION capability in the planner, routing requests like 'classify this area' directly to the representations.
+- Preserved the deterministic OpticalSARSpecialist fallback layer ensuring flawless execution locally.
+- Retained absolute honesty: Training status clearly marked as 'PENDING HARDWARE/DATA' with zero fabricated metrics.
