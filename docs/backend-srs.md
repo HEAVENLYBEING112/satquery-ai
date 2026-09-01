@@ -103,7 +103,7 @@ engine/geospatial/visualization.py  # draw_bounding_boxes()
 engine/pipeline.py                  # CLI entry point
 ```
 
-> CRITICAL: engine/models/ directory does not exist on origin/feat/engine-core. registry.py imports from engine.models.* but those paths exist only in the local feat/backend working copy. This is a repository divergence — feat/backend was branched from an earlier state that included model files not in the final engine-core remote tree. Backend developer must use the local engine/ directory as the runtime. Do not attempt to verify engine/models/ against the remote. Do not delete or modify any engine/ files.
+> CRITICAL: engine/models/ directory does not exist on origin/feat/engine-core. registry.py imports from engine.models.* but those paths exist only in the local feat/backend working copy. This is a repository divergence. The backend implementation must NOT recreate or modify engine/models/. Before merge, the project lead must establish the authoritative source of these model modules and ensure the final feat/backend tree contains the complete runtime required by ModelRegistry.
 
 ---
 
@@ -302,6 +302,7 @@ docs/frontend-srs.md (forensic audit edition, feat/frontend branch) requires the
 
 ```text
 POST /api/v1/assets
+GET  /api/v1/assets/{asset_id}/preview
 POST /api/v1/jobs
 GET  /api/v1/jobs/{job_id}
 GET  /api/v1/jobs/{job_id}/trace
@@ -841,7 +842,7 @@ class ChangeMaskResponse(BaseModel):
 class EvidenceBundleResponse(BaseModel):
     textual_evidence: Optional[str] = None
     bounding_boxes: list[BoundingBoxResponse]
-    visualizations: list[str]            # Ewritten to URLs
+    visualizations: list[str]            # Rewritten to URLs
     change_statistics: Optional[dict[str, Any]] = None
     change_mask: Optional[ChangeMaskResponse] = None
     metadata: dict[str, Any]
@@ -1050,8 +1051,12 @@ async def store_asset(file, settings):
                 raise ApiError("UPLOAD_TOO_LARGE", 413)
             f.write(chunk)
 
-    # 4. Extract metadata (non-fatal)
-    metadata = extract_metadata(str(dest))
+    # 4. Extract and validate metadata (fatal on corruption)
+    try:
+        metadata = extract_metadata(str(dest))
+    except Exception as e:
+        dest.unlink(missing_ok=True)
+        raise ApiError("CORRUPT_FILE", 400)
 
     # 5. Generate preview (non-fatal)
     preview_url = None
@@ -1095,18 +1100,15 @@ def sanitize_filename(filename):
 def extract_metadata(filepath):
     result = {"width": None, "height": None, "bands": None,
               "crs": None, "resolution": None, "bbox": None, "raw_metadata": {}}
-    try:
-        import rasterio
-        with rasterio.open(filepath) as src:
-            result["width"] = src.width
-            result["height"] = src.height
-            result["bands"] = src.count
-            result["crs"] = src.crs.to_string() if src.crs else None
-            result["resolution"] = float(src.res[0]) if src.res else None
-            result["bbox"] = list(src.bounds) if src.bounds else None
-            result["raw_metadata"] = {"dtype": src.dtypes[0] if src.dtypes else None, "nodata": src.nodata}
-    except Exception as e:
-        logger.warning(f"Metadata extraction failed: {e}")
+    import rasterio
+    with rasterio.open(filepath) as src:
+        result["width"] = src.width
+        result["height"] = src.height
+        result["bands"] = src.count
+        result["crs"] = src.crs.to_string() if src.crs else None
+        result["resolution"] = float(src.res[0]) if src.res else None
+        result["bbox"] = list(src.bounds) if src.bounds else None
+        result["raw_metadata"] = {"dtype": src.dtypes[0] if src.dtypes else None, "nodata": src.nodata}
     return result
 ```
 
@@ -1200,8 +1202,8 @@ class JobStore:
             record = self._jobs[job_id]
             for k, v in kwargs.items():
                 setattr(record, k, v)
-            from datetime import datetime
-            record.updated_at = datetime.utcnow().isoformat() + "Z"
+            from datetime import datetime, timezone
+            record.updated_at = datetime.now(timezone.utc).isoformat()
             self._persist(record)
         return record
 
@@ -1283,11 +1285,31 @@ def invoke_engine(job_id, request, asset_store, job_store, settings):
         from engine.agent.registry import ModelRegistry
         engine = SatQueryEngine(registry=ModelRegistry())
 
-        # Run with timeout
-        result = run_with_timeout(
-            fn=lambda: engine.analyze(bundle, request.query),
-            timeout=settings.job_timeout_seconds
-        )
+        import threading
+        
+        result_container = []
+        err_container = []
+        
+        def run_engine():
+            try:
+                res = engine.analyze(bundle, request.query)
+                result_container.append(res)
+            except Exception as ex:
+                err_container.append(ex)
+
+        engine_thread = threading.Thread(target=run_engine)
+        engine_thread.start()
+        engine_thread.join(timeout=settings.job_timeout_seconds)
+
+        if engine_thread.is_alive():
+            # Thread continues running in background (Python threads cannot be safely killed).
+            # We fail the job. The executor's max_workers=1 will remain blocked until it finishes.
+            raise TimeoutError("ENGINE_TIMEOUT: Job exceeded time limit.")
+        
+        if err_container:
+            raise err_container[0]
+            
+        result = result_container[0]
 
         # Serialize
         serialized = serialize_engine_result(result, job_id, asset_map)
@@ -1309,13 +1331,6 @@ def invoke_engine(job_id, request, asset_store, job_store, settings):
                         error_message=f"INTERNAL_ERROR: {str(e)}")
     finally:
         os.environ.pop("SATQUERY_OUTPUT_DIR", None)
-
-
-def run_with_timeout(fn, timeout):
-    from concurrent.futures import ThreadPoolExecutor
-    with ThreadPoolExecutor(max_workers=1) as ex:
-        future = ex.submit(fn)
-        return future.result(timeout=timeout)
 ```
 
 ---
@@ -1363,15 +1378,11 @@ Engine produces pixel coordinates (OpticalSARSpecialist) or geographic coordinat
 
 ```python
 def determine_coordinate_type(bb, asset_map):
-    # Engine V1 does not explicitly tag bounding box coordinate types.
-    # We infer "geo" if the coordinates match the geographical bounds of the input asset.
-    # Otherwise, we default to "pixel".
-    for asset in asset_map.values():
-        if asset.bbox and len(bb.coordinates) == 4:
-            # Check if bbox coordinates overlap with asset's geographical bbox bounds
-            minx, miny, maxx, maxy = bb.coordinates
-            aminx, aminy, amaxx, amaxy = asset.bbox
-            if aminx <= minx <= amaxx and aminy <= miny <= amaxy:
+    # Engine V1 CROMA produces geographic coordinates only if the input asset
+    # has a CRS/bbox. OpticalSARSpecialist always produces pixel coordinates.
+    if bb.source == "croma_classifier":
+        for asset in asset_map.values():
+            if asset.crs and asset.bbox:
                 return "geo"
     return "pixel"
 ```
@@ -1435,7 +1446,7 @@ HTTP status mapping:
 | 400 | INVALID_REQUEST | Validation error |
 | 400 | UNSUPPORTED_FORMAT | Non-.tif file |
 | 400 | INVALID_FILENAME | Path traversal |
-| 404 | TASSET_NOT_FOUND | Unknown asset_id |
+| 404 | ASSET_NOT_FOUND | Unknown asset_id |
 | 404 | JOB_NOT_FOUND | Unknown job_id |
 | 404 | EVIDENCE_NOT_FOUND | File missing |
 | 409 | JOB_NOT_COMPLETE | Trace/report before completion |
@@ -1561,7 +1572,7 @@ async def health():
         torch_available=torch_available,
         cuda_available=cuda_available,
         croma_available=croma_available,
-        timestamp=datetime.utcnow().isoformat() + "Z"
+        timestamp=datetime.now(timezone.utc).isoformat()
     )
 ```
 
@@ -1610,6 +1621,7 @@ All schemas must have Field(description="...") for key fields. No undocumented e
 
 
 - Upload valid .tif -> 200 with asset_id
+- Upload corrupt .tif -> 400 CORRUPT_FILE
 - Upload .jpg -> 400 UNSUPPORTED_FORMAT
 - Upload 51 MB -> 413 UPLOAD_TOO_LARGE
 - Filename ../../evil.tif -> sanitized
@@ -1656,8 +1668,8 @@ All schemas must have Field(description="...") for key fields. No undocumented e
 - BE-050: fallback_reason preserved
 - BE-051: BoundingBox.confidence=None -> null
 - BE-052: BoundingBox.source preserved
-- BE-053: BoundingBox coordinates do not overlap asset bbox -> coordinate_type=pixel
-- BE-054: BoundingBox coordinates overlap asset bbox -> coordinate_type=geo
+- BE-053: BoundingBox.source=optical -> coordinate_type=pixel
+- BE-054: BoundingBox.source=croma_classifier + CRS -> coordinate_type=geo
 
 ### Evidence Serving
 - BE-055: GET /jobs/{id}/evidence/valid.png returns 200 image/png
@@ -1717,7 +1729,7 @@ All schemas must have Field(description="...") for key fields. No undocumented e
 - BE-097: All response fields documented
 
 ### Mock Mode
-- BE-098: SATQUERY_BACKEND_MODE=mock returns fixture
+- BE-098: SATQUERY_MODEL_MODE=mock returns fixture
 - BE-099: Mock fixture confidence null
 - BE-100: Mock cross-modal fixture has fallback_triggered: true
 - BE-101: Mock mode labeled in health response
@@ -1850,7 +1862,7 @@ feat(backend): implement job manager with filesystem persistence
 feat(backend): implement ThreadPoolExecutor job worker
 feat(backend): implement engine service InputBundle construction
 feat(backend): implement engine result serializer
-feat(backend): implement hevidence file serving with path sanitization
+feat(backend): implement evidence file serving with path sanitization
 feat(backend): implement execution trace endpoint
 feat(backend): implement report download endpoint
 feat(backend): implement health and capabilities endpoints
@@ -1890,9 +1902,9 @@ feat/backend is merge-ready when ALL pass:
 |---|---|---|
 | Engine output defaults to outputs/ (gitignored) | High | Backend sets SATQUERY_OUTPUT_DIR before engine.analyze() |
 | errors field bug (dict default) | Medium | Serializer always coerces to list |
-| Coordinate type ambiguity | Medium | Backend infers geo coordinates from bounding box overlap with asset extent |
+| Coordinate type ambiguity | Medium | Backend infers from source + CRS; CROMA uses geographic coordinates when opt_img.bbox is available |
 | CROMA weights not present on demo machine | Low | Engine falls back to OpticalSARSpecialist transparently |
-| engine/models/ absent from engine-core remote | High | Repository integration risk: Backend implementation must establish exactly which model files are required for the combined checkout to run |
+| engine/models/ absent from engine-core remote | High | Repository integration risk: Backend implementation must not modify engine/models/. Project lead must establish the authoritative source of these modules prior to merge |
 | Preview OOM for huge TIFF | Medium | Max 512x512 thumbnail; windowed reads |
 
 ---
@@ -1929,7 +1941,7 @@ feat/backend is merge-ready when ALL pass:
 | "messages": {} in response | Engine bug + missing serializer fix | Coerce: if isinstance(errors, dict): errors = [] |
 | confidence: 0 instead of null | Serializer coercing null | Use Optional[float]; never use `or 0` |
 | 404 on evidence URL | Engine wrote to outputs/ | Fix SATQUERY_OUTPUT_DIR |
-| 500 on corrupted TIFF | rasterio raises | Wrap in try/except in metadata extraction |
+| 400 on corrupted TIFF | rasterio raises | Validate readability and return 400 CORRUPT_FILE |
 | Frontend CORS error | Origin not in allowed list | Add http://localhost:5173 to CORS_ORIGINS |
 | Job stuck running | Timeout not triggering | Verify run_with_timeout implementation |
 | engine/models/ not on engine-core remote | Expected — see Section 5 | Use local working copy |
