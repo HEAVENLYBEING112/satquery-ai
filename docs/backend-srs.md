@@ -311,7 +311,7 @@ GET  /api/v1/health
 GET  /api/v1/capabilities
 ```
 
-All 8 endpoints are compatible with Engine V1. The backend must implement exactly these paths.
+All 9 endpoints are compatible with Engine V1. The backend must implement exactly these paths.
 
 ---
 
@@ -526,7 +526,7 @@ class Settings(BaseSettings):
     runtime_dir: Path = Path("runtime")
     job_timeout_seconds: int = 300
     max_concurrent_jobs: int = 1
-    satquery_model_mode: str = "mock"
+    SATQUERY_MODEL_MODE: str = "mock"
 
     @property
     def assets_dir(self) -> Path:
@@ -913,12 +913,12 @@ def serialize_engine_result(result, job_id, asset_map):
         answer=str(result.answer) if result.answer is not None else None,
         confidence=result.confidence,  # preserve null - NEVER substitute
         specialist_results=[serialize_specialist_result(sr, job_id, asset_map) for sr in result.specialist_results],
-        evidence=[serialize_evidence_bundle(eb, job_id) for eb in result.evidence],
+        evidence=[serialize_evidence_bundle(eb, job_id, asset_map) for eb in result.evidence],
         execution_trace=[TraceStepResponse(**sanitize_trace_step(ts)) for ts in result.execution_trace],
         errors=errors
     )
 
-def serialize_evidence_bundle(bundle, job_id):
+def serialize_evidence_bundle(bundle, job_id, asset_map):
     vis_urls = [path_to_evidence_url(p, job_id) for p in bundle.visualizations if p]
 
     change_mask_resp = None
@@ -937,17 +937,15 @@ def serialize_evidence_bundle(bundle, job_id):
 
     return EvidenceBundleResponse(
         textual_evidence=bundle.textual_evidence,
-        bounding_boxes=[serialize_bounding_box(bb) for bb in bundle.bounding_boxes],
+        bounding_boxes=[serialize_bounding_box(bb, asset_map) for bb in bundle.bounding_boxes],
         visualizations=vis_urls,
         change_statistics=bundle.change_statistics,
         change_mask=change_mask_resp,
         metadata=bundle.metadata  # preserve fallback_triggered, fallback_reason
     )
 
-def serialize_bounding_box(bb):
-    coordinate_type = "pixel"
-    if bb.source in ["croma_classifier"]:
-        coordinate_type = "geo"  # only when CRS present; default pixel otherwise
+def serialize_bounding_box(bb, asset_map):
+    coordinate_type = determine_coordinate_type(bb, asset_map)
     return BoundingBoxResponse(
         label=bb.label,
         coordinates=bb.coordinates,
@@ -1045,7 +1043,7 @@ async def store_asset(file, settings):
 
     total_bytes = 0
     with dest.open("wb") as f:
-        async for chunk in file.chunks(chunk_size=65536):
+        while chunk := await file.read(65536):
             total_bytes += len(chunk)
             if total_bytes > settings.max_upload_bytes:
                 dest.unlink(missing_ok=True)
@@ -1270,8 +1268,12 @@ def invoke_engine(job_id, request, asset_store, job_store, settings):
         # Configure engine output directory
         job_output_dir = settings.jobs_dir / job_id / "output"
         job_output_dir.mkdir(parents=True, exist_ok=True)
+        
+        # WARNING: Mutating process-wide os.environ is unsafe for concurrency.
+        # Since max_workers=1, this is serialized, but if Engine V1 supports 
+        # passing an output directory explicitly in the future, use that instead.
         os.environ["SATQUERY_OUTPUT_DIR"] = str(job_output_dir)
-        os.environ["SATQUERY_MODEL_MODE"] = settings.satquery_model_mode
+        os.environ["SATQUERY_MODEL_MODE"] = settings.SATQUERY_MODEL_MODE
 
         # Build InputBundle
         bundle, asset_map = build_input_bundle(request, asset_store, job_output_dir)
@@ -1361,9 +1363,15 @@ Engine produces pixel coordinates (OpticalSARSpecialist) or geographic coordinat
 
 ```python
 def determine_coordinate_type(bb, asset_map):
-    if bb.source == "croma_classifier":
-        for asset in asset_map.values():
-            if asset.crs:
+    # Engine V1 does not explicitly tag bounding box coordinate types.
+    # We infer "geo" if the coordinates match the geographical bounds of the input asset.
+    # Otherwise, we default to "pixel".
+    for asset in asset_map.values():
+        if asset.bbox and len(bb.coordinates) == 4:
+            # Check if bbox coordinates overlap with asset's geographical bbox bounds
+            minx, miny, maxx, maxy = bb.coordinates
+            aminx, aminy, amaxx, amaxy = asset.bbox
+            if aminx <= minx <= amaxx and aminy <= miny <= amaxy:
                 return "geo"
     return "pixel"
 ```
@@ -1536,7 +1544,12 @@ async def health():
         import torch
         torch_available = True
         cuda_available = torch.cuda.is_available()
-        croma_available = True  # if CROMASpecialist imports successfully
+    except Exception:
+        pass
+
+    try:
+        from engine.models.croma.specialist import CROMASpecialist
+        croma_available = True
     except Exception:
         pass
 
@@ -1643,8 +1656,8 @@ All schemas must have Field(description="...") for key fields. No undocumented e
 - BE-050: fallback_reason preserved
 - BE-051: BoundingBox.confidence=None -> null
 - BE-052: BoundingBox.source preserved
-- BE-053: BoundingBox.source=optical -> coordinate_type=pixel
-- BE-054: BoundingBox.source=croma_classifier + CRS -> coordinate_type=geo
+- BE-053: BoundingBox coordinates do not overlap asset bbox -> coordinate_type=pixel
+- BE-054: BoundingBox coordinates overlap asset bbox -> coordinate_type=geo
 
 ### Evidence Serving
 - BE-055: GET /jobs/{id}/evidence/valid.png returns 200 image/png
@@ -1699,7 +1712,7 @@ All schemas must have Field(description="...") for key fields. No undocumented e
 ### OpenAPI
 - BE-093: /docs returns 200
 - BE-094: /openapi.json is valid OpenAPI 3.0
-- BE-095: All 8 endpoint paths in OpenAPI schema
+- BE-095: All 9 endpoint paths in OpenAPI schema
 - BE-096: All request fields documented
 - BE-097: All response fields documented
 
@@ -1864,7 +1877,7 @@ feat/backend is merge-ready when ALL pass:
 4. git diff --name-only origin/feat/backend | grep frontend/ returns empty
 5. uvicorn backend.app.main:app starts without errors
 6. GET /api/v1/health returns 200 with engine_available: true
-7. GET /openapi.json returns valid schema with all 8 endpoints
+7. GET /openapi.json returns valid schema with all 9 endpoints
 8. Frontend connects via VITE_API_BASE_URL=http://localhost:8000
 9. Full mock demo completes: upload -> submit -> poll -> result -> trace -> report
 10. Working tree clean on feat/backend
@@ -1877,9 +1890,9 @@ feat/backend is merge-ready when ALL pass:
 |---|---|---|
 | Engine output defaults to outputs/ (gitignored) | High | Backend sets SATQUERY_OUTPUT_DIR before engine.analyze() |
 | errors field bug (dict default) | Medium | Serializer always coerces to list |
-| Coordinate type ambiguity | Medium | Backend infers from source + CRS; documented heuristic |
+| Coordinate type ambiguity | Medium | Backend infers geo coordinates from bounding box overlap with asset extent |
 | CROMA weights not present on demo machine | Low | Engine falls back to OpticalSARSpecialist transparently |
-| engine/models/ absent from engine-core remote | None | Local working copy is complete runtime |
+| engine/models/ absent from engine-core remote | High | Repository integration risk: Backend implementation must establish exactly which model files are required for the combined checkout to run |
 | Preview OOM for huge TIFF | Medium | Max 512x512 thumbnail; windowed reads |
 
 ---
