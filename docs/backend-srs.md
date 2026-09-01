@@ -369,7 +369,7 @@ backend/
         dependencies.py      #FastAPI Depends() providers
         api/
             __init__.py
-            assets.py        #POST /api/v1/assets
+            assets.py        #POST /api/v1/assets, GET /api/v1/assets/{asset_id}/preview
             jobs.py          #POST/GET /api/v1/jobs/*
             system.py        #GET /api/v1/health, /capabilities
             errors.py        #Global exception handlers
@@ -568,6 +568,7 @@ Validation:
 - Extension must be .tif or .tiff -> 400 UNSUPPORTED_FORMAT
 - Size must be <= MAX_UPLOAD_BYTES -> 413 UPLOAD_TOO_LARGE
 - Filename sanitized (no .., no path separators)
+- Raster readability verified with rasterio.open() -> 400 CORRUPT_FILE on failure
 
 Success Response 200:
 ```json
@@ -637,7 +638,7 @@ Success Response 202:
 {
   "job_id": "550e8400-e29b-41d4-a716-446655440002",
   "status": "queued",
-  "created_at": "2026-09-01T14:00:00Z"
+  "created_at": "2026-09-01T14:00:00+00:00"
 }
 ```
 
@@ -650,8 +651,8 @@ While running (200):
 {
   "job_id": "uuid",
   "status": "running",
-  "created_at": "2026-09-01T14:00:00Z",
-  "updated_at": "2026-09-01T14:00:05Z",
+  "created_at": "2026-09-01T14:00:00+00:00",
+  "updated_at": "2026-09-01T14:00:05+00:00",
   "result": null
 }
 ```
@@ -661,8 +662,8 @@ On completion (200):
 {
   "job_id": "uuid",
   "status": "completed",
-  "created_at": "2026-09-01T14:00:00Z",
-  "updated_at": "2026-09-01T14:00:18Z",
+  "created_at": "2026-09-01T14:00:00+00:00",
+  "updated_at": "2026-09-01T14:00:18+00:00",
   "result": { /* EngineResultResponse */ }
 }
 ```
@@ -742,7 +743,7 @@ Response 200:
   "torch_available": false,
   "cuda_available": false,
   "croma_available": false,
-  "timestamp": "2026-09-01T14:00:00Z"
+  "timestamp": "2026-09-01T14:00:00+00:00"
 }
 ```
 
@@ -1392,7 +1393,7 @@ Frontend detects fallback by scanning evidence[-1].metadata.fallback_triggered =
 
 ## 28. Bounding Box Coordinate Normalization
 
-Engine produces pixel coordinates (OpticalSARSpecialist) or geographic coordinates (CROMASpecialist when opt_img.bbox available). Client cannot distinguish without coordinate_type.
+Engine produces pixel coordinates (OpticalSARSpecialist) or geographic coordinates (CROMASpecialist when opt_img.bbox available). Client cannot distinguish without coordinate_type. The backend MUST guarantee this field is present in every BoundingBoxResponse.
 
 ```python
 def determine_coordinate_type(bb, asset_map):
@@ -1931,13 +1932,13 @@ The final `feat/backend` implementation must satisfy all of the following requir
 | 1 - Bootstrap | main.py, config, dependencies | 1h |
 | 2 - Schemas | All Pydantic schemas | 2h |
 | 3 - Storage | filesystem.py, paths.py, AssetStore, JobStore | 2h |
-| 4 - Asset Upload | Upload endpoint, metadata, preview | 3h |
+| 4 - Asset Upload | POST /assets, GET /assets/{id}/preview, metadata | 3h |
 | 5 - Serializer | engine_result.py with path rewriting | 3h |
 | 6 - Engine Service | InputBundle construction, invocation | 2h |
 | 7 - Job Worker | ThreadPoolExecutor, timeout, lifecycle | 2h |
-| 8 - Job API | POST /jobs, GET /jobs/{id} | 2h |
-| 9 - Evidence | Serving, path traversal protection | 2h |
-| 10 - Trace + Report | Trace endpoint, report download | 1h |
+| 8 - Job API | POST /api/v1/jobs, GET /api/v1/jobs/{id} | 2h |
+| 9 - Evidence | GET /api/v1/jobs/{id}/evidence/{filename} | 2h |
+| 10 - Trace + Report | GET /api/v1/jobs/{id}/trace, GET /api/v1/jobs/{id}/report | 1h |
 | 11 - System | Health, capabilities | 1h |
 | 12 - CORS + Errors | Middleware, global handlers | 1h |
 | 13 - Mock Mode | Backend mock fixtures | 1h |
