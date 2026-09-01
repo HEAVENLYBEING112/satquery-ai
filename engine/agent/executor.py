@@ -94,7 +94,13 @@ class WorkflowExecutor:
                 "result_summary": result.answer
             })
 
-        if final_confidence == 1.0 and not specialist_results:
+        if final_confidence == 1.0:
+            if any(r.confidence is not None for r in specialist_results):
+                # At least one returned 1.0
+                pass
+            else:
+                final_confidence = None
+        if not specialist_results and final_confidence == 1.0:
             final_confidence = 0.0
 
         return EngineResult(

@@ -33,17 +33,7 @@ class ModelRegistry:
             # AI Optical-SAR Registration with Graceful Fallback
             from engine.models.croma import CROMASpecialist
             ai_model = CROMASpecialist()
-            try:
-                # Test lazy initialization safely if required by hardware
-                import torch
-                # Only register if weights are found or we allow dynamic downloading
-                # For safety, we just register it; the executor handles runtime fallback 
-                # if lazy load fails. But let's check basic torch first.
-                self.register(ai_model)
-            except ImportError:
-                print("PyTorch not found. Falling back to deterministic OpticalSARSpecialist.")
-                fallback_model = OpticalSARSpecialist()
-                self._models["croma_specialist"] = fallback_model
+            self.register(ai_model)
         else:
             self.register(OpticalSARSpecialist())
 

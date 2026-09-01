@@ -71,24 +71,15 @@ def get_demo_cases():
     ]
 
 def run_cases(cases, current_registry=None):
+    from engine.core import SatQueryEngine
+    
     if current_registry is None:
         current_registry = registry
         
-    planner = Planner()
-    executor = WorkflowExecutor(current_registry)
+    engine = SatQueryEngine(registry=current_registry)
     
     for tc in cases:
-        try:
-            plan = planner.plan(tc["query"], tc["inputs"])
-            result = executor.execute(plan, tc["query"], tc["inputs"])
-        except PlannerError as e:
-            result = executor._create_error_result(
-                request_id=str(uuid.uuid4()),
-                query=tc["query"],
-                task=None,
-                code="PLANNING_FAILED",
-                message=str(e)
-            )
+        result = engine.analyze(tc["inputs"], tc["query"])
         print_result(result, title=tc.get("title", "SATQUERY AI ENGINE"))
 
 def main():
