@@ -60,3 +60,17 @@ For hardware accessibility and fallback, SatQuery uses a highly optimized CPU-ba
 - **ChangeFormer**: A transformer-based change detection architecture, though it outputs semantic segmentation masks rather than conversational text.
 
 Currently, the engine provides exact extension points (`engine/models/change_description.py` and `engine/models/change_vqa.py`) explicitly designed to integrate an AI Change Model like ChangeChat once hardware permits. Until then, it utilizes the CPU baseline detector and explicitly documents its semantic limitations to the user.
+
+## 3. Optical-SAR Cross-Modal Fusion
+
+### Candidate Models
+- **GeoChat (Future Multi-modal extension)**: Can be extended to accept stacked Optical+SAR tensors but requires retraining.
+- **K-Radar / SAR-Optical Fusion models**: Academic models designed for SAR-Optical translation or fusion.
+- **Prithvi (NASA/IBM)**: Highly capable of handling arbitrary bands (including SAR channels) if fine-tuned, though not inherently conversational.
+
+### Baseline Implementation
+SatQuery currently employs a deterministic OpticalSARSpecialist.
+- **Methodology**: Applies independent robust normalizations: percentile RGB normalization for Optical and dB-conversion + percentile normalization for SAR.
+- **Heuristics**: Extracts water (low optical reflection, low SAR backscatter) and built-up areas (high optical reflection, high SAR backscatter via double-bounce).
+- **Evidence**: Explicitly calculates agreement and disagreement regions between modalities, enforcing the requirement that both sensors contribute meaningfully to the final answer without fabricating fake fusion textual responses.
+- **Future Work**: Replace with a true cross-modal Vision-Language Model that natively ingests co-registered Optical and SAR tensors.

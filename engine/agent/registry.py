@@ -3,14 +3,13 @@ from typing import Dict, List, Optional
 from engine.models.base import SpecialistModel
 from engine.contracts import TaskType, InputBundle
 from engine.models.mocks import (
-    MockVQA, MockCaptioner, MockGrounding,
-    MockChangeDetector, MockChangeDescription,
-    MockChangeVQA, MockOpticalSAR
+    MockVQA, MockCaptioner, MockGrounding, MockOpticalSAR
 )
 
 from engine.models.change_detection import BaselineChangeDetector
 from engine.models.change_description import MockChangeDescription
 from engine.models.change_vqa import MockChangeVQA
+from engine.models.optical_sar import OpticalSARSpecialist
 
 class ModelRegistry:
     def __init__(self):
@@ -25,7 +24,7 @@ class ModelRegistry:
         self.register(BaselineChangeDetector())
         self.register(MockChangeDescription())
         self.register(MockChangeVQA())
-        self.register(MockOpticalSAR())
+        self.register(OpticalSARSpecialist())
         
         # Real models registered based on configuration
         mode = os.getenv("SATQUERY_MODEL_MODE", "mock").lower()

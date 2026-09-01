@@ -22,7 +22,7 @@ class PlanValidator:
             if inputs.image_count != 2:
                 raise ValidationError(f"{plan.task.value} requires exactly 2 images, got {inputs.image_count}.")
                 
-        if plan.task == TaskType.OPTICAL_SAR_ANALYSIS:
+        if plan.task == TaskType.CROSS_MODAL_OPTICAL_SAR:
             if not (inputs.has_optical and inputs.has_sar):
                 raise ValidationError("Optical-SAR analysis requires at least one optical and one SAR image.")
                 
@@ -44,7 +44,7 @@ class PlanValidator:
                     raise ValidationError(f"Temporal images are incompatible: {report['reason']}")
                     
             # Optical-SAR compatibility check
-            if plan.task == TaskType.OPTICAL_SAR_ANALYSIS:
+            if plan.task == TaskType.CROSS_MODAL_OPTICAL_SAR:
                 report = self.check_pair_compatibility(img1, img2)
                 if report["status"] == "incompatible":
                     raise ValidationError(f"Optical and SAR images are incompatible: {report['reason']}")

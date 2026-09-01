@@ -58,7 +58,7 @@ def test_planner_optical_sar(opt_img, sar_img):
     bundle = InputBundle(images=[opt_img, sar_img])
     
     plan = planner.plan("Use optical and SAR together.", bundle)
-    assert plan.task == TaskType.OPTICAL_SAR_ANALYSIS
+    assert plan.task == TaskType.CROSS_MODAL_OPTICAL_SAR
 
 def test_registry():
     model = registry.get("MockVQA")
@@ -83,7 +83,7 @@ def test_plan_validation(opt_img, opt_img2, sar_img):
         
     # Invalid (Optical SAR with 2 optical)
     plan_fusion = WorkflowPlan(
-        task=TaskType.OPTICAL_SAR_ANALYSIS,
+        task=TaskType.CROSS_MODAL_OPTICAL_SAR,
         input_type=InputType.OPTICAL_SAR_PAIR,
         input_ids=["1", "2"],
         steps=[WorkflowStep(tool="MockOpticalSAR")]

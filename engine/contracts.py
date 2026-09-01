@@ -10,7 +10,7 @@ class TaskType(str, Enum):
     TEMPORAL_CHANGE_DETECTION = "temporal_change_detection"
     TEMPORAL_CHANGE_DESCRIPTION = "temporal_change_description"
     TEMPORAL_CHANGE_VQA = "temporal_change_vqa"
-    OPTICAL_SAR_ANALYSIS = "optical_sar_analysis"
+    CROSS_MODAL_OPTICAL_SAR = "cross_modal_optical_sar"
 
 class InputType(str, Enum):
     SINGLE_OPTICAL = "single_optical"
@@ -88,6 +88,20 @@ class InputBundle:
             if img.id != before_img.id:
                 return img
         return self.images[-1]
+
+    @property
+    def optical_image(self) -> Optional[ImageAsset]:
+        for img in self.images:
+            if img.modality.lower() in ["optical", "multispectral"]:
+                return img
+        return None
+        
+    @property
+    def sar_image(self) -> Optional[ImageAsset]:
+        for img in self.images:
+            if img.modality.lower() == "sar":
+                return img
+        return None
 
     def determine_input_type(self) -> InputType:
         if self.image_count == 1:
