@@ -14,8 +14,6 @@ The backend acts as the bridge between the frontend application and the stabiliz
 
 ***Developers:*** `Tarunika , Subhiksha`
 
-> Replace the placeholders above with the actual names of the two assigned backend developers.
-
 Both developers are responsible for implementing the backend according to the official Backend Software Requirements Specification (SRS).
 
 The two developers should coordinate changes on the same backend branch and keep the implementation continuously mergeable.
