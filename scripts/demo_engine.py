@@ -25,7 +25,14 @@ def print_result(result):
         fallback = evidence.metadata.get("fallback_triggered", False)
     print(f"FALLBACK: {fallback}")
     
-    print(f"CONFIDENCE: {result.confidence if result.confidence is not None else 'N/A'}")
+    if result.confidence is not None:
+        conf_str = str(result.confidence)
+    else:
+        if specialist and 'mock' in specialist.model_name.lower():
+            conf_str = 'N/A — mock/development result'
+        else:
+            conf_str = 'N/A'
+    print(f"CONFIDENCE: {conf_str}")
     print(f"FINAL ANSWER: {result.answer}")
     
     print("\nEVIDENCE:")

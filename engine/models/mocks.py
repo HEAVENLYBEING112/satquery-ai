@@ -38,7 +38,7 @@ class MockCaptioner(SpecialistModel):
             model_name=self.name,
             task=TaskType.SINGLE_IMAGE_CAPTION,
             answer="A remote-sensing scene containing vegetation and built-up structures.",
-            confidence=0.85,
+            confidence=None,
             evidence=EvidenceBundle(),
             execution_time=0.1
         )
@@ -58,7 +58,7 @@ class MockGrounding(SpecialistModel):
             model_name=self.name,
             task=TaskType.SINGLE_IMAGE_GROUNDING,
             answer="Object grounded.",
-            confidence=0.91,
+            confidence=None,
             evidence=EvidenceBundle(),
             execution_time=0.1
         )
@@ -78,7 +78,7 @@ class MockOpticalSAR(SpecialistModel):
             model_name=self.name,
             task=TaskType.CROSS_MODAL_OPTICAL_SAR,
             answer="Optical and SAR evidence indicate built-up regions.",
-            confidence=0.92,
+            confidence=None,
             evidence=EvidenceBundle(),
             execution_time=0.25
         )
