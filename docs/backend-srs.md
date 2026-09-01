@@ -801,7 +801,7 @@ from typing import Optional, Literal
 
 class AssetRef(BaseModel):
     asset_id: str
-    modality: Literal["optical", "sar"]
+    modality: Literal["optical", "sar", "multispectral"]
     role: Optional[Literal["before", "after"]] = None
     acquisition_time: Optional[str] = None
 
@@ -1132,11 +1132,15 @@ def generate_preview(src_path, dest_path, metadata, max_size=512):
         elif bands >= 1:
             data = src.read([1])
             data = np.stack([data[0]] * 3)  # grayscale -> RGB
+        
+        nodata = src.nodata
 
         # Percentile normalization
         preview = np.zeros((3, data.shape[1], data.shape[2]), dtype=np.float32)
         for i in range(3):
             band = data[i].astype(np.float32)
+            if nodata is not None:
+                band[data[i] == nodata] = np.nan
             valid = band[~np.isnan(band)]
             if len(valid) == 0:
                 continue
@@ -1304,8 +1308,11 @@ def invoke_engine(job_id, request, asset_store, job_store, settings):
         if engine_thread.is_alive():
             # Thread continues running in background because Python threads
             # cannot be safely force-killed. The job is marked failed.
-            # The worker thread returns, but the engine thread may continue
-            # consuming resources until the engine call exits.
+            # To prevent the zombie thread from concurrently modifying SATQUERY_OUTPUT_DIR
+            # or competing for VRAM on a subsequent job, we explicitly block the worker
+            # thread indefinitely until the engine exits, or a process restart occurs.
+            logger.critical("ENGINE_TIMEOUT: Job timed out. Worker thread blocked to prevent resource contention.")
+            engine_thread.join()
             raise TimeoutError("ENGINE_TIMEOUT: Job exceeded time limit.")
         
         if err_container:
@@ -1421,7 +1428,7 @@ async def serve_evidence(job_id, filename, ...):
     allowed_dir = evidence_dir.resolve()
 
     # 4. Verify path is inside allowed dir
-    if not str(file_path).startswith(str(allowed_dir)):
+    if not file_path.is_relative_to(allowed_dir):
         raise ApiError("INVALID_FILENAME", 400)
 
     # 5. Verify file exists
@@ -1447,7 +1454,8 @@ HTTP status mapping:
 
 | HTTP | Code | Trigger |
 |---|---|---|
-| 400 | INVALID_REQUEST | Validation error |
+| 400 | INVALID_REQUEST | Application/business logic validation error |
+| 422 | VALIDATION_ERROR | Pydantic / schema validation failure |
 | 400 | UNSUPPORTED_FORMAT | Non-.tif file |
 | 400 | INVALID_FILENAME | Path traversal |
 | 400 | CORRUPT_FILE | rasterio cannot parse/read uploaded TIFF |
@@ -1491,7 +1499,7 @@ Never log: raw image binary, model weights, full filesystem paths in production.
 
 ### 32.1 Path Traversal Prevention
 
-Every filename from clients passes through sanitize_evidence_filename() and is verified with startswith(allowed_dir).
+Every filename from clients passes through sanitize_evidence_filename() and is verified with is_relative_to(allowed_dir).
 
 ### 32.2 Upload Security
 
@@ -1600,7 +1608,7 @@ All schemas must have Field(description="...") for key fields. No undocumented e
 ### 36.1 Unit Tests
 
 - test_sanitize_filename: valid, traversal, unicode, empty
-- test_sanitize_evidence_filename: ../ rejected, absolute paths rejected
+- test_sanitize_evidence_filename: ../ sanitized, absolute paths rejected
 - test_path_to_evidence_url: converts path to URL
 - test_coordinate_type: pixel/geo heuristic
 - test_confidence_preserved_null
@@ -1635,7 +1643,7 @@ All schemas must have Field(description="...") for key fields. No undocumented e
 - POST /jobs empty query -> 400
 - POST /jobs query over 500 chars -> 422
 - POST /jobs with 3 assets -> 422
-- POST /jobs invalid modality -> 422
+- POST /jobs invalid modality (e.g. not optical/sar/multispectral) -> 422
 - Job record at runtime/jobs/{id}/job.json
 
 ### Job Polling
@@ -1834,7 +1842,7 @@ COPY configs/ configs/
 VOLUME ["/app/runtime"]
 ENV RUNTIME_DIR=/app/runtime
 EXPOSE 8000
-HEALTHCHECK --interval=30s --timeout=10s CMD curl -f http://localhost:8000/api/v1/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')" || exit 1
 CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
 ```
 
@@ -1943,7 +1951,7 @@ feat/backend is merge-ready when ALL pass:
 | 404 on evidence URL | Engine wrote to outputs/ | Fix SATQUERY_OUTPUT_DIR |
 | 400 on corrupted TIFF | rasterio raises | Validate readability and return 400 CORRUPT_FILE |
 | Frontend CORS error | Origin not in allowed list | Add http://localhost:5173 to CORS_ORIGINS |
-| Job stuck running | Timeout not triggering | Verify Thread and join timeout implementation |
+| Job stuck running | Timeout not triggering | Worker thread intentionally blocked on zombie engine thread. Process restart required. |
 | engine/models/ not on engine-core remote | Expected — see Section 5 | Await project lead resolution for CI merge |
 
 ---
