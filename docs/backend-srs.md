@@ -326,6 +326,7 @@ All 9 endpoints are compatible with Engine V1. The backend must implement exactl
 | 4 | Frontend expects errors as List always. Engine has field(default_factory=dict) which returns {} on success. | Backend coerces: if isinstance(errors, dict): errors = [] |
 | 5 | Frontend expects confidence as number or null. Engine Optional[float]. | No conflict. Backend must keep Optional and never coerce. |
 | 6 | Frontend expects web-viewable preview images. Engine generates no previews. | Backend generates PNG preview during asset upload. |
+| 7 | Frontend expects answer as string. Engine returns Any. | Backend coerces answer to string during serialization. |
 
 ---
 
@@ -896,7 +897,7 @@ The serializer in backend/app/serializers/engine_result.py is the most critical 
 import os
 from pathlib import Path
 
-def serialize_engine_result(result, job_id, asset_map):
+def serialize_engine_result(result, job_id, asset_map, job_output_dir):
     # Fix errors field bug
     errors_raw = result.errors
     if isinstance(errors_raw, dict):
@@ -914,19 +915,19 @@ def serialize_engine_result(result, job_id, asset_map):
         answer=str(result.answer) if result.answer is not None else None,
         confidence=result.confidence,  # preserve null - NEVER substitute
         specialist_results=[serialize_specialist_result(sr, job_id, asset_map) for sr in result.specialist_results],
-        evidence=[serialize_evidence_bundle(eb, job_id, asset_map) for eb in result.evidence],
+        evidence=[serialize_evidence_bundle(eb, job_id, asset_map, job_output_dir) for eb in result.evidence],
         execution_trace=[TraceStepResponse(**sanitize_trace_step(ts)) for ts in result.execution_trace],
         errors=errors
     )
 
-def serialize_evidence_bundle(bundle, job_id, asset_map):
-    vis_urls = [path_to_evidence_url(p, job_id) for p in bundle.visualizations if p]
+def serialize_evidence_bundle(bundle, job_id, asset_map, job_output_dir):
+    vis_urls = [path_to_evidence_url(p, job_id, job_output_dir) for p in bundle.visualizations if p]
 
     change_mask_resp = None
     if bundle.change_mask:
         mask_url = None
         if bundle.change_mask.mask_path:
-            mask_url = path_to_evidence_url(bundle.change_mask.mask_path, job_id)
+            mask_url = path_to_evidence_url(bundle.change_mask.mask_path, job_id, job_output_dir)
         change_mask_resp = ChangeMaskResponse(
             width=bundle.change_mask.width,
             height=bundle.change_mask.height,
@@ -955,9 +956,11 @@ def serialize_bounding_box(bb, asset_map):
         source=bb.source
     )
 
-def path_to_evidence_url(path, job_id):
-    filename = Path(path).name
-    return f"/api/v1/jobs/{job_id}/evidence/{filename}"
+def path_to_evidence_url(path, job_id, job_output_dir):
+    file_path = Path(path)
+    if not file_path.is_relative_to(job_output_dir):
+        raise ValueError("Evidence path outside allowed job output directory")
+    return f"/api/v1/jobs/{job_id}/evidence/{file_path.name}"
 
 def sanitize_trace_step(ts):
     summary = ts.get("result_summary")
@@ -1127,10 +1130,14 @@ def generate_preview(src_path, dest_path, metadata, max_size=512):
     with rasterio.open(src_path) as src:
         bands = src.count
 
+        # Windowed downsampled read to prevent huge TIFF OOM
+        scale = min(1.0, max_size / max(src.width, src.height))
+        out_shape = (int(src.height * scale) or 1, int(src.width * scale) or 1)
+
         if bands >= 3:
-            data = src.read([1, 2, 3])
+            data = src.read([1, 2, 3], out_shape=(3, *out_shape))
         elif bands >= 1:
-            data = src.read([1])
+            data = src.read([1], out_shape=(1, *out_shape))
             data = np.stack([data[0]] * 3)  # grayscale -> RGB
         
         nodata = src.nodata
@@ -1323,7 +1330,7 @@ def invoke_engine(job_id, request, asset_store, job_store, settings):
         result = result_container[0]
 
         # Serialize
-        serialized = serialize_engine_result(result, job_id, asset_map)
+        serialized = serialize_engine_result(result, job_id, asset_map, job_output_dir)
 
         # Store
         job_store.update(
@@ -1951,7 +1958,7 @@ The final `feat/backend` implementation must satisfy all of the following requir
 | 404 on evidence URL | Engine wrote to outputs/ | Fix SATQUERY_OUTPUT_DIR |
 | 400 on corrupted TIFF | rasterio raises | Validate readability and return 400 CORRUPT_FILE |
 | Frontend CORS error | Origin not in allowed list | Add http://localhost:5173 to CORS_ORIGINS |
-| Job stuck running | Timeout not triggering | Worker thread intentionally blocked on zombie engine thread. Process restart required. |
+| Worker blocked after timeout | Engine thread continues | Job marked failed after timeout; worker may remain blocked until the underlying engine thread exits. Process restart may be required if the engine thread never exits. |
 | engine/models/ not on engine-core remote | Expected — see Section 5 | Await project lead resolution for CI merge |
 
 ---
