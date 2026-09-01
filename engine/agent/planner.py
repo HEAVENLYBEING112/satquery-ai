@@ -19,7 +19,7 @@ class Planner:
                 TaskType.TEMPORAL_CHANGE_DETECTION: "baseline_change_detector",
                 TaskType.TEMPORAL_CHANGE_DESCRIPTION: "mock_change_description",
                 TaskType.TEMPORAL_CHANGE_VQA: "mock_change_vqa",
-                TaskType.CROSS_MODAL_OPTICAL_SAR: "optical_sar_specialist"
+                TaskType.CROSS_MODAL_OPTICAL_SAR: "OpticalSARAI_DualEncoder"
             }
         else:
             task_to_tool = {

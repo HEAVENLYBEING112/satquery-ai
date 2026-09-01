@@ -10,21 +10,18 @@ from engine.models.change_detection import BaselineChangeDetector
 from engine.models.change_description import MockChangeDescription
 from engine.models.change_vqa import MockChangeVQA
 from engine.models.optical_sar import OpticalSARSpecialist
+from engine.models.optical_sar_ai import OpticalSARAI
 
 class ModelRegistry:
     def __init__(self):
         self._models: Dict[str, SpecialistModel] = {}
-        self._register_defaults()
-
-    def _register_defaults(self):
-        # Mocks are always available
+        # Register base deterministic models
         self.register(MockVQA())
         self.register(MockCaptioner())
         self.register(MockGrounding())
         self.register(BaselineChangeDetector())
         self.register(MockChangeDescription())
         self.register(MockChangeVQA())
-        self.register(OpticalSARSpecialist())
         
         # Real models registered based on configuration
         mode = os.getenv("SATQUERY_MODEL_MODE", "mock").lower()
@@ -33,6 +30,20 @@ class ModelRegistry:
             from engine.models.remote_sensing_grounding import RemoteSensingGrounding
             self.register(RemoteSensingVQA())
             self.register(RemoteSensingGrounding())
+            
+            # AI Optical-SAR Registration with Graceful Fallback
+            ai_model = OpticalSARAI()
+            try:
+                # Test lazy initialization safely if required by hardware
+                import torch
+                self.register(ai_model)
+            except ImportError:
+                print("PyTorch not found. Falling back to deterministic OpticalSARSpecialist.")
+                fallback_model = OpticalSARSpecialist()
+                # Alias the fallback model to the AI name so planner routes cleanly
+                self._models["OpticalSARAI_DualEncoder"] = fallback_model
+        else:
+            self.register(OpticalSARSpecialist())
 
     def register(self, model: SpecialistModel):
         if model.name in self._models:

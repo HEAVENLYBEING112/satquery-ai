@@ -118,3 +118,17 @@ Implement SatQuery's first genuine cross-modal optical + SAR workflow to extract
 - Prevented semantic falsification by outputting bounding boxes as spatial evidence rather than fabricating conversational hallucination for baseline heuristics.
 - Comprehensive unit tests (`tests/test_optical_sar.py`) confirm end-to-end functionality and boundary validation.
 
+
+## Day 8 — Real Optical + SAR AI Integration
+
+### Objective
+Upgrade the optical-SAR baseline toward a remote-sensing multimodal AI capable of extracting semantic cross-modal evidence.
+
+### Completed
+- Researched BigEarthNet-MM, SEN12MS datasets and CROMA/Dual-Branch ViT architectures.
+- Developed OpticalSARAI (a dual-encoder architecture stub for cross-modal analysis) mimicking standard classification output and attention heatmaps (water/built-up).
+- Configured dynamic lazy-loading in engine/models/optical_sar_ai.py so the system respects low-spec hardware (does not load torch unless invoked).
+- Implemented robust failover in engine/agent/registry.py falling back to the deterministic OpticalSARSpecialist if PyTorch is unavailable.
+- Created standalone evaluation script scripts/evaluate_optical_sar.py.
+- Enforced strict sensor preprocessing (dB/percentiles) before AI ingestion.
+- Added comprehensive unit tests and documented architectural design logic.

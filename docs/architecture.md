@@ -21,3 +21,30 @@ graph TD
 - **Model Registry**: Centralized registry for all available Specialist models (VQA, Change Detection, Fusion, etc.).
 - **Workflow Executor**: Deterministically executes the steps defined in the plan, collects evidence, and generates the final EngineResult.
 - **Specialist Models**: Independent, modular AI components that implement the `SpecialistModel` interface.
+
+## Cross-Modal AI Workflow
+
+`	ext
+                CROSS-MODAL QUERY
+                       ↓
+                Planner
+                       ↓
+              Pair Validator
+                       ↓
+                Registration
+                       ↓
+            ┌──────────┴──────────┐
+            ▼                     ▼
+         Optical                  SAR
+       Preprocessor           Preprocessor
+            │                     │
+            └──────────┬──────────┘
+                       ▼
+              Cross-Modal AI
+                       │
+                       ▼
+                   Evidence
+                       │
+                       ▼
+                 EngineResult
+`
