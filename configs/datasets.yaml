@@ -1,8 +1,0 @@
-development:
-  max_samples: 1000
-
-smoke_test:
-  max_samples: 20
-
-production:
-  max_samples: null
