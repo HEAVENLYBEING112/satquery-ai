@@ -1018,7 +1018,7 @@ Valid input combinations:
 | 2 | optical + optical | YES | Temporal optical |
 | 2 | sar + sar | YES | Temporal SAR |
 | 2 | optical + sar | YES | Cross-modal |
-| 3+ | any | NO | 400 INVALID_REQUEST |
+| 3+ | any | NO | 422 VALIDATION_ERROR |
 
 ---
 
@@ -1302,13 +1302,17 @@ def invoke_engine(job_id, request, asset_store, job_store, settings):
         engine_thread.join(timeout=settings.job_timeout_seconds)
 
         if engine_thread.is_alive():
-            # Thread continues running in background (Python threads cannot be safely killed).
-            # We fail the job. The executor's max_workers=1 will remain blocked until it finishes.
+            # Thread continues running in background because Python threads
+            # cannot be safely force-killed. The job is marked failed.
+            # The worker thread returns, but the engine thread may continue
+            # consuming resources until the engine call exits.
             raise TimeoutError("ENGINE_TIMEOUT: Job exceeded time limit.")
         
         if err_container:
             raise err_container[0]
             
+        if not result_container:
+            raise RuntimeError("ENGINE_NO_RESULT: Engine returned no result.")
         result = result_container[0]
 
         # Serialize
@@ -1446,6 +1450,7 @@ HTTP status mapping:
 | 400 | INVALID_REQUEST | Validation error |
 | 400 | UNSUPPORTED_FORMAT | Non-.tif file |
 | 400 | INVALID_FILENAME | Path traversal |
+| 400 | CORRUPT_FILE | rasterio cannot parse/read uploaded TIFF |
 | 404 | ASSET_NOT_FOUND | Unknown asset_id |
 | 404 | JOB_NOT_FOUND | Unknown job_id |
 | 404 | EVIDENCE_NOT_FOUND | File missing |
@@ -1629,7 +1634,7 @@ All schemas must have Field(description="...") for key fields. No undocumented e
 - POST /jobs with unknown asset_id -> 404
 - POST /jobs empty query -> 400
 - POST /jobs query over 500 chars -> 422
-- POST /jobs 3 assets -> 400
+- POST /jobs with 3 assets -> 422
 - POST /jobs invalid modality -> 422
 - Job record at runtime/jobs/{id}/job.json
 
@@ -1814,6 +1819,8 @@ curl http://localhost:8000/openapi.json
 ```
 
 ### 38.8 Docker (Optional)
+
+> Docker deployment is blocked until the `engine/models/` repository integration issue described in Section 5 is resolved.
 
 ```dockerfile
 FROM python:3.11-slim
