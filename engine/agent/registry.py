@@ -35,6 +35,10 @@ class ModelRegistry:
             ai_model = CROMASpecialist()
             self.register(ai_model)
         else:
+            from engine.models.croma import CROMASpecialist
+            ai_model = CROMASpecialist()
+            ai_model._hardware_unavailable = True
+            self.register(ai_model)
             self.register(OpticalSARSpecialist())
 
     def register(self, model: SpecialistModel):
