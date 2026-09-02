@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - master
+      - feat/frontend
   workflow_dispatch:
 
 permissions:
