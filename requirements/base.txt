@@ -2,3 +2,4 @@ rasterio
 numpy
 Pillow
 pyproj
+scipy
