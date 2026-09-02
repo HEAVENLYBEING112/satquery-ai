@@ -5,16 +5,16 @@
 [![Vite](https://img.shields.io/badge/Bundler-Vite%208-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vite.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Styling-Tailwind%20CSS%20v4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![Organization](https://img.shields.io/badge/Organization-ISRO%20SAC-FF9933?style=flat-square&logo=satellite&logoColor=white)](https://www.isro.gov.in/)
-[![Theme](https://img.shields.io/badge/Theme-Space%20Technology-0EA5E9?style=flat-square)](https://github.com/HEAVENLYBEING112/satquery-ai)
-[![GitHub Pages](https://img.shields.io/badge/Deployment-GitHub%20Pages-22C55E?style=flat-square&logo=githubpages&logoColor=white)](https://heavenlybeing112.github.io/satquery-ai/)
-[![GitHub Repo](https://img.shields.io/badge/GitHub-HEAVENLYBEING112%2Fsatquery--ai-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/HEAVENLYBEING112/satquery-ai)
+[![Theme](https://img.shields.io/badge/Theme-Space%20Technology-0EA5E9?style=flat-square)](https://github.com/sujans9b-sys/satquery-ai)
+[![GitHub Pages](https://img.shields.io/badge/Deployment-GitHub%20Pages-22C55E?style=flat-square&logo=githubpages&logoColor=white)](https://sujans9b-sys.github.io/satquery-ai/)
+[![GitHub Repo](https://img.shields.io/badge/GitHub-sujans9b--sys%2Fsatquery--ai-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/sujans9b-sys/satquery-ai)
 
 ---
 
 ## 🔗 Project Quick Links
 
-- 🛰️ **Virtual Demo**: [https://heavenlybeing112.github.io/satquery-ai/](https://heavenlybeing112.github.io/satquery-ai/) *(Live Interactive Web Application)*
-- 📂 **GitHub Repository**: [https://github.com/HEAVENLYBEING112/satquery-ai/tree/feat/frontend](https://github.com/HEAVENLYBEING112/satquery-ai/tree/feat/frontend)
+- 🛰️ **Virtual Demo**: [https://sujans9b-sys.github.io/satquery-ai/](https://sujans9b-sys.github.io/satquery-ai/) *(Live Interactive Web Application)*
+- 📂 **GitHub Repository**: [https://github.com/sujans9b-sys/satquery-ai](https://github.com/sujans9b-sys/satquery-ai)
 - 📑 **System Requirements Specification (SRS)**: [`docs/frontend-srs.md`](docs/frontend-srs.md)
 
 ---
@@ -102,11 +102,8 @@ src/
 
 ```bash
 # Clone repository
-git clone https://github.com/HEAVENLYBEING112/satquery-ai.git
+git clone https://github.com/sujans9b-sys/satquery-ai.git
 cd satquery-ai
-
-# Checkout frontend branch
-git checkout feat/frontend
 
 # Install dependencies
 npm install
@@ -129,12 +126,10 @@ The optimized static production bundle will be generated in the `dist/` director
 
 ## 🌐 Deployment to GitHub Pages
 
-The repository includes a ready-to-run GitHub Actions CI/CD workflow (`.github/workflows/deploy.yml`). 
-
-Whenever code is pushed to `feat/frontend` or `main`:
+Whenever code is pushed to `main`:
 1. The GitHub Action installs dependencies and executes `npm run build`.
 2. The static bundle in `./dist` is published automatically to GitHub Pages.
-3. The live application is immediately accessible at [https://heavenlybeing112.github.io/satquery-ai/](https://heavenlybeing112.github.io/satquery-ai/).
+3. The live application is immediately accessible at [https://sujans9b-sys.github.io/satquery-ai/](https://sujans9b-sys.github.io/satquery-ai/).
 
 ---
 
