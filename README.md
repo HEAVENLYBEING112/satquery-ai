@@ -132,6 +132,3 @@ Whenever code is pushed to `main`:
 3. The live application is immediately accessible at [https://sujans9b-sys.github.io/satquery-ai/](https://sujans9b-sys.github.io/satquery-ai/).
 
 ---
-
-## 📄 License
-Developed for ISRO Space Applications Centre (SAC) • Smart India Hackathon 2026.
