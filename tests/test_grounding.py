@@ -1,17 +1,20 @@
 import pytest
 from engine.models.remote_sensing_grounding import RemoteSensingGrounding
+from engine.contracts import EvidenceBundle
 
 def test_grounding_box_parsing():
     model = RemoteSensingGrounding()
-    # GeoChat outputs [ymin, xmin, ymax, xmax] scaled to [0, 1000]
-    # For a 1000x1000 image, [200, 100, 400, 500] -> [100, 200, 500, 400]
-    boxes = model._parse_bounding_boxes("The water is at [200, 100, 400, 500].", 1000, 1000)
-    
+    # GeoChat outputs {<x1><y1><x2><y2>|<angle>} scaled to 0-100
+    evidence = EvidenceBundle()
+    boxes = model._parse_bounding_boxes("The water is at {<20><10><40><50>|<90>}", 1000, 1000, evidence)
+
     assert len(boxes) == 1
     box = boxes[0]
     assert box.label == "detected_region"
-    assert box.coordinates == [100.0, 200.0, 500.0, 400.0]
-    
-    # 500x500 image, [0, 0, 1000, 1000] -> [0, 0, 500, 500]
-    boxes2 = model._parse_bounding_boxes("[0, 0, 1000, 1000]", 500, 500)
-    assert boxes2[0].coordinates == [0.0, 0.0, 500.0, 500.0]
+    assert box.coordinates == pytest.approx([200.0, 100.0, 400.0, 500.0])
+
+    # 500x500 image
+    evidence2 = EvidenceBundle()
+    boxes2 = model._parse_bounding_boxes("{<0><0><100><100>|<0>}", 500, 500, evidence2)
+    assert len(boxes2) == 1
+    assert boxes2[0].coordinates == pytest.approx([0.0, 0.0, 500.0, 500.0])

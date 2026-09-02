@@ -37,8 +37,8 @@ def test_prepare_image_normalization(tmp_path):
     model = RemoteSensingVQA()
     asset = ImageAsset(id="1", path=test_tiff, filename="test_norm.tif", format="GeoTIFF", modality="optical")
     
-    img = model._prepare_image(asset)
-    img_array = np.array(img)
+    img_b64 = model._prepare_image_base64(asset)
+    import base64; from PIL import Image; import io; img = Image.open(io.BytesIO(base64.b64decode(img_b64))); img_array = np.array(img)
     
     # Check it is RGB
     assert img_array.shape == (10, 10, 3)
@@ -77,8 +77,8 @@ def test_prepare_image_sentinel_13_bands(tmp_path):
     model = RemoteSensingVQA()
     asset = ImageAsset(id="1", path=test_tiff, filename="test_norm.tif", format="GeoTIFF", modality="optical")
     
-    img = model._prepare_image(asset)
-    img_array = np.array(img)
+    img_b64 = model._prepare_image_base64(asset)
+    import base64; from PIL import Image; import io; img = Image.open(io.BytesIO(base64.b64decode(img_b64))); img_array = np.array(img)
     
     # Red channel (index 0) should be min (0 in normalization)
     # Blue channel (index 2) should be max (255)
