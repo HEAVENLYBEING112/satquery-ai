@@ -101,7 +101,7 @@ class RemoteSensingGrounding(RemoteSensingVQA):
 
             payload = {
                 "query": query,
-                "task": task.value if hasattr(task, 'value') else str(task),
+                "task": "grounding",
                 "image_base64": image_b64
             }
 

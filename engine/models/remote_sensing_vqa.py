@@ -110,7 +110,7 @@ class RemoteSensingVQA(SpecialistModel):
 
             payload = {
                 "query": query,
-                "task": task.value if hasattr(task, 'value') else str(task),
+                "task": "vqa",
                 "image_base64": image_b64
             }
 
