@@ -1,0 +1,19 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="satGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06b6d4" />
+      <stop offset="50%" stop-color="#4f46e5" />
+      <stop offset="100%" stop-color="#3b82f6" />
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="46" fill="#050811" stroke="url(#satGrad)" stroke-width="4" />
+  <!-- Orbit Path -->
+  <ellipse cx="50" cy="50" rx="38" ry="18" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.6" transform="rotate(-30 50 50)" />
+  <!-- Central Globe -->
+  <circle cx="50" cy="50" r="16" fill="#0f172a" stroke="#4f46e5" stroke-width="2" />
+  <path d="M 38 46 Q 50 42 62 46 Q 58 58 42 56 Z" fill="#0284c7" opacity="0.8" />
+  <circle cx="50" cy="50" r="3" fill="#38bdf8" />
+  <!-- Satellite Unit -->
+  <rect x="68" y="24" width="12" height="7" rx="1.5" fill="#f8fafc" transform="rotate(-30 74 27)" />
+  <line x1="60" y1="20" x2="88" y2="34" stroke="#06b6d4" stroke-width="2" />
+</svg>
