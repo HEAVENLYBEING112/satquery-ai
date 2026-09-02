@@ -13,7 +13,7 @@
 
 ## 🔗 Project Quick Links
 
-- 🛰️ **Virtual Demo**: [https://sujans9b-sys.github.io/satquery-ai/](https://sujans9b-sys.github.io/satquery-ai/) *(Live Interactive Web Application)*
+- 🛰️ **Virtual Demo**: [https://sujans9b-sys.github.io/satquery-ai/](https://sujans9b-sys.github.io/satquery-ai/) *(Demo Web Application)*
 - 📂 **GitHub Repository**: [https://github.com/sujans9b-sys/satquery-ai](https://github.com/sujans9b-sys/satquery-ai)
 - 📑 **System Requirements Specification (SRS)**: [`docs/frontend-srs.md`](docs/frontend-srs.md)
 
