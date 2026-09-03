@@ -28,9 +28,59 @@ result = engine.analyze(inputs=bundle, query="Are there buildings visible?")
 - You must supply an `InputBundle` consisting of 1 or more `ImageAsset` objects.
 - A natural language `query` string.
 
-## Expected Output
-- The engine guarantees an `EngineResult` object.
-- The `EngineResult` contains `status` ("success" or "error"), the semantic `answer`, an `evidence` array, and internal tracing properties.
+## Result Fields (`EngineResult`)
+- `request_id` (str): Unique execution identifier.
+- `status` (str): `"success"` or `"failed"`.
+- `query` (str): Original input query.
+- `task` (TaskType): The determined workflow task.
+- `answer` (Any): The textual/semantic answer.
+- `confidence` (float|None): Scientifically derived confidence (strictly `None` if unmeasured).
+- `evidence` (List[EvidenceBundle]): Sequential list of evidence from each step.
+- `execution_trace` (List[dict]): Diagnostic trace of execution steps.
+- `errors` (List[EngineError]): Structured error information if `status == "failed"`.
+
+## Evidence Fields (`EvidenceBundle`)
+- `textual_evidence` (str|None): Supporting text from the specialist.
+- `bounding_boxes` (List[BoundingBox]): Spatial coordinates of detected features.
+- `change_statistics` (dict|None): Numerical statistics for temporal tasks.
+- `change_mask` (ChangeMask|None): Binary/probability mask for change tasks.
+- `metadata` (dict): Additional information, including fallback status.
+
+## Workflow Examples
+
+### 1. Single-Image VQA
+```python
+img = ImageAsset(id="1", path="/p/opt.tif", modality="optical")
+res = engine.analyze(InputBundle([img]), "Are there buildings?")
+# res.answer -> "Yes, buildings are present."
+# res.confidence -> None (or float if real model)
+```
+
+### 2. Single-Image Grounding
+```python
+img = ImageAsset(id="1", path="/p/opt.tif", modality="optical")
+res = engine.analyze(InputBundle([img]), "Highlight the airplanes.")
+# res.answer -> "{<10><20><30><40>|...}" (raw response)
+# res.evidence[-1].bounding_boxes -> [BoundingBox(coordinates=[10, 20, 30, 40])]
+```
+
+### 3. Bi-Temporal Change Analysis
+```python
+t1 = ImageAsset(id="1", path="/p/t1.tif", modality="optical")
+t2 = ImageAsset(id="2", path="/p/t2.tif", modality="optical")
+res = engine.analyze(InputBundle([t1, t2]), "What changed?")
+# res.answer -> "Detected measurable pixel-level change affecting 4.0% of the area..."
+# res.evidence[-1].change_statistics -> {"changed_fraction": 0.04, ...}
+```
+
+### 4. Cross-Modal Optical + SAR
+```python
+opt = ImageAsset(id="1", path="/p/opt.tif", modality="optical")
+sar = ImageAsset(id="2", path="/p/sar.tif", modality="sar")
+res = engine.analyze(InputBundle([opt, sar]), "Analyze cross-modal features.")
+# res.answer -> "Regions of cross-modal response indicate physical and statistical cues..."
+# res.evidence[-1].metadata["fallback_triggered"] -> True (if CROMA unavailable)
+```
 
 ## Supported Workflows
 - `SINGLE_IMAGE_VQA`

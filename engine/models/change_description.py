@@ -46,12 +46,21 @@ class DeterministicChangeSummarizer(SpecialistModel):
         else:
             answer = "No significant pixel-level change was detected by the deterministic change detector."
             
+        evidence = EvidenceBundle(
+            textual_evidence=answer,
+            bounding_boxes=boxes,
+            change_statistics=stats if stats else None,
+            change_mask=prev_evidence.change_mask if prev_evidence else None,
+            visualizations=prev_evidence.visualizations if prev_evidence else [],
+            metadata=prev_evidence.metadata if prev_evidence else {}
+        )
+            
         return SpecialistResult(
             status="success",
             model_name=self.name,
             task=TaskType.TEMPORAL_CHANGE_DESCRIPTION,
             answer=answer,
             confidence=None,
-            evidence=EvidenceBundle(textual_evidence=answer),
+            evidence=evidence,
             execution_time=time.time() - start_time
         )

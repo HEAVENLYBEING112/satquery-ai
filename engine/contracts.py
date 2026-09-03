@@ -186,4 +186,4 @@ class EngineResult:
     specialist_results: List[SpecialistResult]
     evidence: List[EvidenceBundle]
     execution_trace: List[Dict[str, Any]]
-    errors: List[EngineError] = field(default_factory=dict)
+    errors: List[EngineError] = field(default_factory=list)
