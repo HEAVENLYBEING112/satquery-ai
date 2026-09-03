@@ -69,12 +69,14 @@ class WorkflowExecutor:
                 
                 result = model.run(inputs, query, run_params)
             except Exception as e:
+                import logging
+                logging.error(f"MODEL_EXECUTION_FAILED: {str(e)}")
                 return self._create_error_result(
                     request_id=request_id,
                     query=query,
                     task=plan.task,
                     code="MODEL_EXECUTION_FAILED",
-                    message=str(e)
+                    message="Model execution failed due to an internal error."
                 )
 
             duration_ms = int((time.time() - start_time) * 1000)

@@ -73,6 +73,7 @@ class RasterLoader:
                     "transform": src.transform.to_gdal() if src.transform else None,
                     "bounds": bounds,
                 }
+                metadata.update(src.tags())
                 
                 modality = modality_override or detect_modality(filename, bands, metadata)
                 

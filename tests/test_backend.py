@@ -7,7 +7,7 @@ from backend.main import app
 
 client = TestClient(app)
 
-def create_synthetic_tiff_bytes(shape, value=1000):
+def create_synthetic_tiff_bytes(shape, value=1000, tags=None):
     import rasterio
     from rasterio.transform import from_origin
     from rasterio.io import MemoryFile
@@ -19,6 +19,8 @@ def create_synthetic_tiff_bytes(shape, value=1000):
             dtype=data.dtype, crs='+proj=latlong', transform=transform,
         ) as dst:
             dst.write(data)
+            if tags:
+                dst.update_tags(**tags)
         return memfile.read()
 
 def test_health():
@@ -84,7 +86,7 @@ def test_analyze_temporal():
 
 def test_analyze_optical_sar():
     opt_bytes = create_synthetic_tiff_bytes((3, 10, 10))
-    sar_bytes = create_synthetic_tiff_bytes((2, 10, 10))
+    sar_bytes = create_synthetic_tiff_bytes((2, 10, 10), tags={"modality": "SAR"})
     
     response = client.post(
         "/analyze",

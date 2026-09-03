@@ -174,7 +174,9 @@ class BaselineChangeDetector(SpecialistModel):
             answer = f"Baseline detection complete. {changed_fraction:.2%} change detected."
             
         except Exception as e:
-            raise Exception(f"MODEL_INFERENCE_FAILED: {str(e)}")
+            import logging
+            logging.error(f"MODEL_INFERENCE_FAILED: {str(e)}")
+            raise Exception("Failed to execute baseline change detection algorithm due to unexpected runtime error.")
             
         return SpecialistResult(
             status="success",

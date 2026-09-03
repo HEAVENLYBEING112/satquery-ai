@@ -35,10 +35,11 @@ def test_loader_modality_override(fixtures_dir):
     assert asset.modality == "custom_modality"
 
 def test_detect_modality():
-    assert detect_modality("s1_image.tif", 1, {}) == "sar"
+    assert detect_modality("s1_image.tif", 1, {}) == "unknown"
     assert detect_modality("s2_image.tif", 3, {}) == "optical"
     assert detect_modality("some_image.tif", 4, {}) == "multispectral"
     assert detect_modality("unknown.tif", 2, {}) == "unknown"
+    assert detect_modality("s1_image.tif", 1, {"modality": "SAR"}) == "sar"
 
 def test_tiling():
     config = TileConfig(tile_size=128, overlap=0)

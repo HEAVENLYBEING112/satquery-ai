@@ -87,8 +87,10 @@ def register_pair(before: ImageAsset, after: ImageAsset, output_dir: str = "/tmp
             metadata={"resampling": "nearest"}
         )
     except Exception as e:
+        import logging
+        logging.error(f"Reprojection failed: {str(e)}")
         return RegistrationResult(
             status="INCOMPATIBLE",
             method="reprojection_failed",
-            metadata={"error": str(e)}
+            metadata={"error": "Reprojection failed due to internal error."}
         )

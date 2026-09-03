@@ -102,15 +102,17 @@ class CROMASpecialist(SpecialistModel):
             with rasterio.open(reg_result.aligned_after_path) as src_sar:
                 sar_arr = src_sar.read()
         except Exception as e:
+            import logging
+            logging.error(f"Alignment Error: {str(e)}")
             return SpecialistResult(
-                status="error",
+                status="failed",
                 model_name=self.name,
                 task=TaskType.CROSS_MODAL_OPTICAL_SAR,
-                answer="Failed to align input images.",
+                answer="Failed to align optical and SAR imagery.",
                 confidence=None,
                 evidence=EvidenceBundle(),
                 execution_time=time.time() - start_time,
-                error=f"Alignment Error: {str(e)}"
+                error="Alignment failed due to internal processing error."
             )
             
         opt_arr = np.expand_dims(opt_arr, axis=0) if opt_arr.ndim == 2 else opt_arr
@@ -192,6 +194,8 @@ class CROMASpecialist(SpecialistModel):
                     joint_gap = outputs[list(outputs.keys())[0]].cpu().numpy() if isinstance(outputs, dict) else outputs.cpu().numpy()
                     
             except Exception as e:
+                import logging
+                logging.error("CROMA inference error")
                 return SpecialistResult(
                     status="error",
                     model_name=self.name,
@@ -200,7 +204,7 @@ class CROMASpecialist(SpecialistModel):
                     confidence=None,
                     evidence=EvidenceBundle(),
                     execution_time=time.time() - start_time,
-                    error=f"CROMA inference error: {str(e)}"
+                    error="CROMA AI execution failed unexpectedly."
                 )
                 
         # 7. Downstream Task Head (Lightweight Classifier)

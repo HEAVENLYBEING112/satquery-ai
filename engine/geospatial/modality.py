@@ -14,12 +14,6 @@ def detect_modality(filename: str, band_count: int, metadata: dict) -> str:
     if band_count > 3:
         return "multispectral"
         
-    # 3. Filename heuristic ONLY as a documented fallback for 1-2 band images
-    if band_count in [1, 2]:
-        if "sar" in fn_lower or "s1" in fn_lower:
-            return "sar"
-        if "optical" in fn_lower or "s2" in fn_lower or "rgb" in fn_lower:
-            return "optical"
-            
-    # 4. Otherwise UNKNOWN (do not silently classify as SAR)
+    # 3. We no longer use filename heuristics as scientific proof for ambiguous 1/2-band data.
+    # Without explicit metadata, 1/2-band imagery is structurally ambiguous (could be panchromatic, mask, SAR).
     return "unknown"

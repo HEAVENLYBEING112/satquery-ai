@@ -64,12 +64,12 @@ class RemoteSensingVQA(SpecialistModel):
 
                     pil_img = Image.fromarray(img_arr)
             except Exception as e:
-                raise ModelInputUnsupportedError(f"Failed to prepare GeoTIFF {asset.path}: {str(e)}")
+                raise ModelInputUnsupportedError(f"Failed to prepare GeoTIFF for inference.")
         else:
             try:
                 pil_img = Image.open(asset.path).convert("RGB")
             except Exception as e:
-                raise ModelInputUnsupportedError(f"Failed to prepare image {asset.path}: {str(e)}")
+                raise ModelInputUnsupportedError(f"Failed to prepare standard image for inference.")
 
         buf = BytesIO()
         pil_img.save(buf, format="JPEG")

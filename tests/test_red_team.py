@@ -39,6 +39,7 @@ def test_oversized_raster(monkeypatch):
             self.nodata = None
             self.dtypes = ['uint8']
             self.transform = None
+        def tags(self): return {}
         def __enter__(self): return self
         def __exit__(self, *args): pass
         
@@ -96,11 +97,13 @@ def test_modality_spoofing():
     assert detect_modality("spoof_sar.tif", 3, {}) == "optical"
     assert detect_modality("spoof_sar.tif", 4, {}) == "multispectral"
     
-    # 1 or 2 bands -> SAR if named SAR
-    assert detect_modality("image_sar.tif", 2, {}) == "sar"
+    # Ambiguous 1/2-band -> UNKNOWN (Filename alone is not scientific proof)
+    assert detect_modality("image_sar.tif", 2, {}) == "unknown"
+    assert detect_modality("image_optical.tif", 1, {}) == "unknown"
     
     # Explicit metadata overrides
     assert detect_modality("image.tif", 3, {"modality": "SAR"}) == "sar"
+    assert detect_modality("legitimate_sar.tif", 2, {"modality": "sar"}) == "sar"
 
 def test_planner_routing():
     planner = Planner()
