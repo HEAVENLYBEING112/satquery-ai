@@ -1,0 +1,74 @@
+﻿@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-primary: #050505;
+    --bg-secondary: #0d0d0d;
+    --bg-card: #111111;
+    --bg-card-subtle: #161616;
+    --border-subtle: rgba(255, 255, 255, 0.10);
+    --border-strong: rgba(255, 255, 255, 0.20);
+    --text-primary: #FFFFFF;
+    --text-secondary: #A0A0A0;
+    --text-muted: #666666;
+    --accent-sky: #38BDF8;
+    --accent-sky-dark: #0EA5E9;
+    --accent-sky-light: #7DD3FC;
+    --status-green: #22C55E;
+    --status-red: #EF4444;
+  }
+
+  body {
+    background-color: #050505;
+    color: #FFFFFF;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.01em;
+  }
+
+  /* Mission Control Monospace & Labels */
+  .font-mono {
+    font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+  }
+
+  /* Mission Control Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #050505;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #222222;
+    border-radius: 2px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #38BDF8;
+  }
+}
+
+/* Subtle Sky Blue Glows for Active Elements */
+.glow-sky {
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.25);
+}
+
+.glow-sky-sm {
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.2);
+}
+
+/* Print view optimization */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  header, aside, .print\:hidden {
+    display: none !important;
+  }
+}
