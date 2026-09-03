@@ -17,7 +17,7 @@ class Planner:
                 TaskType.SINGLE_IMAGE_CAPTION: "mock_captioner",
                 TaskType.SINGLE_IMAGE_GROUNDING: "remote_sensing_grounding",
                 TaskType.TEMPORAL_CHANGE_DETECTION: "baseline_change_detector",
-                TaskType.TEMPORAL_CHANGE_DESCRIPTION: "mock_change_description",
+                TaskType.TEMPORAL_CHANGE_DESCRIPTION: "temporal_change_summarizer",
                 TaskType.TEMPORAL_CHANGE_VQA: "mock_change_vqa",
                 TaskType.CROSS_MODAL_OPTICAL_SAR: "croma_specialist",
                 TaskType.CROMA_CLASSIFICATION: "croma_specialist"
@@ -28,7 +28,7 @@ class Planner:
                 TaskType.SINGLE_IMAGE_CAPTION: "MockCaptioner",
                 TaskType.SINGLE_IMAGE_GROUNDING: "MockGrounding",
                 TaskType.TEMPORAL_CHANGE_DETECTION: "baseline_change_detector",
-                TaskType.TEMPORAL_CHANGE_DESCRIPTION: "mock_change_description",
+                TaskType.TEMPORAL_CHANGE_DESCRIPTION: "temporal_change_summarizer",
                 TaskType.TEMPORAL_CHANGE_VQA: "mock_change_vqa",
                 TaskType.CROSS_MODAL_OPTICAL_SAR: "optical_sar_specialist",
                 TaskType.CROMA_CLASSIFICATION: "croma_specialist"

@@ -54,13 +54,13 @@ def test_change_detector_synthetic(tmp_path):
     assert 58 <= box[3] <= 62
     
 def test_mock_description():
-    from engine.models.change_description import MockChangeDescription
-    desc = MockChangeDescription()
+    from engine.models.change_description import DeterministicChangeSummarizer
+    desc = DeterministicChangeSummarizer()
     
     img = ImageAsset(id="1", path="a.tif", filename="a", format="GeoTIFF", modality="optical")
     bundle = InputBundle(images=[img, img])
     
     # Parameter injection from previous step
     res = desc.run(bundle, "describe", {"change_statistics": {"changed_fraction": 0.05, "regions_found": 2}})
-    assert "2 distinct changed regions" in res.answer
+    assert "2 detected regions" in res.answer
     assert "5.00%" in res.answer

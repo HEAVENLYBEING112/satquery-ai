@@ -62,8 +62,10 @@ class WorkflowExecutor:
                 run_params = dict(step.parameters)
                 if all_evidence:
                     last_evidence = all_evidence[-1]
-                    if last_evidence and last_evidence.change_statistics:
-                        run_params["change_statistics"] = last_evidence.change_statistics
+                    if last_evidence:
+                        run_params["previous_evidence"] = last_evidence
+                        if last_evidence.change_statistics:
+                            run_params["change_statistics"] = last_evidence.change_statistics
                 
                 result = model.run(inputs, query, run_params)
             except Exception as e:

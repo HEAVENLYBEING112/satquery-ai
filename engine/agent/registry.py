@@ -7,7 +7,7 @@ from engine.models.mocks import (
 )
 
 from engine.models.change_detection import BaselineChangeDetector
-from engine.models.change_description import MockChangeDescription
+from engine.models.change_description import DeterministicChangeSummarizer
 from engine.models.change_vqa import MockChangeVQA
 from engine.models.optical_sar import OpticalSARSpecialist
 
@@ -19,7 +19,7 @@ class ModelRegistry:
         self.register(MockCaptioner())
         self.register(MockGrounding())
         self.register(BaselineChangeDetector())
-        self.register(MockChangeDescription())
+        self.register(DeterministicChangeSummarizer())
         self.register(MockChangeVQA())
         
         # Real models registered based on configuration

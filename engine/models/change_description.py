@@ -3,7 +3,7 @@ from typing import Dict, Any, Optional
 from engine.models.base import SpecialistModel, ModelInputUnsupportedError
 from engine.contracts import SpecialistResult, InputBundle, TaskType, EvidenceBundle
 
-class MockChangeDescription(SpecialistModel):
+class DeterministicChangeSummarizer(SpecialistModel):
     """
     Consumes outputs from a change detector and deterministically describes the changes.
     Does not hallucinate semantic meaning (e.g. 'new buildings') without semantic models.
@@ -11,7 +11,7 @@ class MockChangeDescription(SpecialistModel):
     
     @property
     def name(self) -> str:
-        return "mock_change_description"
+        return "temporal_change_summarizer"
         
     @property
     def supported_tasks(self):
@@ -23,17 +23,28 @@ class MockChangeDescription(SpecialistModel):
     def run(self, inputs: InputBundle, query: str, parameters: Optional[Dict[str, Any]] = None) -> SpecialistResult:
         start_time = time.time()
         
-        # We expect prior steps to have injected change_statistics or mask into parameters or via the executor.
-        # Since the executor currently doesn't seamlessly merge previous EvidenceBundles into `parameters` 
-        # for mock stubs dynamically in this simplified engine, we'll gracefully handle it.
-        stats = parameters.get("change_statistics", {})
+        parameters = parameters or {}
+        prev_evidence = parameters.get("previous_evidence")
+        stats = parameters.get("change_statistics") or {}
         
-        if stats:
+        boxes = prev_evidence.bounding_boxes if prev_evidence else []
+        
+        if stats and stats.get("changed_fraction", 0.0) > 0:
             frac = stats.get("changed_fraction", 0.0)
-            regions = stats.get("regions_found", 0)
-            answer = f"Based on spatial evidence, there are {regions} distinct changed regions, covering {frac:.2%} of the area. I cannot determine the semantic nature of the change (e.g., 'new buildings') without a semantic change model."
+            regions = stats.get("regions_found", len(boxes))
+            
+            extent_info = ""
+            if boxes:
+                # Calculate approximate spatial extent if boxes are available
+                min_x = min(b.coordinates[0] for b in boxes)
+                min_y = min(b.coordinates[1] for b in boxes)
+                max_x = max(b.coordinates[2] for b in boxes)
+                max_y = max(b.coordinates[3] for b in boxes)
+                extent_info = f" with an approximate spatial extent bounding box of [{min_x:.1f}, {min_y:.1f}, {max_x:.1f}, {max_y:.1f}]"
+
+            answer = f"Detected measurable pixel-level change affecting approximately {frac:.2%} of the analyzed area across {regions} detected regions{extent_info}. Registration and processing succeeded."
         else:
-            answer = "Significant pixel-level change was detected. I cannot determine the semantic nature of the change."
+            answer = "No significant pixel-level change was detected by the deterministic change detector."
             
         return SpecialistResult(
             status="success",
