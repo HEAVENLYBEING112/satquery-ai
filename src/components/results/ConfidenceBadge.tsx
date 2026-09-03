@@ -1,4 +1,4 @@
-﻿// frontend/src/components/results/ConfidenceBadge.tsx
+// frontend/src/components/results/ConfidenceBadge.tsx
 import React from 'react';
 import { formatConfidence } from '../../utils/formatters';
 import { Tooltip } from '../ui/Tooltip';
@@ -20,7 +20,7 @@ export const ConfidenceBadge: React.FC<ConfidenceBadgeProps> = ({ confidence, cl
         <ShieldCheck className="w-3.5 h-3.5 text-[#38BDF8]" />
         <span className="text-[#A0A0A0]">CONFIDENCE:</span>
         <span className={isAvailable ? 'text-[#38BDF8]' : 'text-[#666666]'}>
-          {isAvailable ? `${percentage}` : 'N/A'}
+          {isAvailable ? `${percentage}` : 'NOT CALIBRATED'}
         </span>
       </div>
     </Tooltip>
