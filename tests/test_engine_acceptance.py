@@ -78,8 +78,8 @@ def test_e08_invalid_cross_modal_input(engine, temp_geotiff):
     else:
         assert result.task != TaskType.CROSS_MODAL_OPTICAL_SAR
 
-def test_e11_missing_croma(engine, temp_geotiff):
-    os.environ["SATQUERY_MODEL_MODE"] = "real"
+def test_e11_missing_croma(engine, temp_geotiff, monkeypatch):
+    monkeypatch.setenv("SATQUERY_MODEL_MODE", "real")
     engine_real = SatQueryEngine(registry=ModelRegistry())
     
     path1 = temp_geotiff("opt1.tif", 12)

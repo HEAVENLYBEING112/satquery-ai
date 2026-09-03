@@ -125,9 +125,11 @@ class OpticalSARSpecialist(SpecialistModel):
             )
             
             answer = (
-                "Both optical and SAR evidence have been evaluated. "
-                "Regions of agreement indicate high confidence in the presence of water and built-up structures. "
-                "The analysis utilized spectral characteristics from the optical imagery and structural backscatter from the SAR imagery."
+                "Both optical and SAR evidence have been evaluated deterministically. "
+                "Regions of cross-modal response indicate physical and statistical cues, "
+                "such as distinct optical reflectance characteristics aligned with "
+                "specific SAR backscatter characteristics. Semantic classification requires "
+                "a dedicated AI model."
             )
             
             return SpecialistResult(
