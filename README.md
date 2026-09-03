@@ -1,4 +1,4 @@
-﻿# SatQuery AI – Interactive Vision-Language Assistant for Multimodal Remote Sensing Image Analysis through Text Queries
+# SatQuery AI – Interactive Vision-Language Assistant for Multimodal Remote Sensing Image Analysis through Text Queries
 
 [![React](https://img.shields.io/badge/Frontend-React%2018-38BDF8?style=flat-square&logo=react&logoColor=white)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/Language-TypeScript%205.8-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -88,7 +88,7 @@ src/
 └── pages/                     # 10 dedicated platform pages
 ```
 
-> **Future Backend Integration**: Simply set `VITE_USE_MOCK=false` in `.env` and configure `VITE_API_BASE_URL` to point to the real backend server.
+> **Backend Integration**: Set `VITE_USE_MOCK=false` in `.env` and configure `VITE_API_BASE_URL` to point to the real backend server (e.g., `http://127.0.0.1:8000`). The frontend will automatically use the synchronous `POST /analyze` endpoint.
 
 ---
 
@@ -97,6 +97,7 @@ src/
 ### Prerequisites
 - Node.js 18+ or 20+
 - npm 9+ or pnpm
+- (Optional) Running SatQuery AI FastAPI backend
 
 ### Installation
 
@@ -112,6 +113,21 @@ npm install
 npm run dev
 ```
 
+### Running with Real Backend
+
+1. Start the SatQuery AI FastAPI backend:
+   ```bash
+   uvicorn backend.main:app --reload
+   ```
+2. Configure the frontend `.env`:
+   ```bash
+   VITE_USE_MOCK=false
+   VITE_API_BASE_URL=http://127.0.0.1:8000
+   ```
+3. Start the frontend:
+   ```bash
+   npm run dev
+   ```
 
 ### Production Build
 
