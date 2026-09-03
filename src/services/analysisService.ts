@@ -1,4 +1,4 @@
-﻿// frontend/src/services/analysisService.ts
+// frontend/src/services/analysisService.ts
 // ============================================================================
 // SATQUERY AI - SATELLITE INTELLIGENCE SERVICE LAYER
 // ============================================================================
@@ -7,10 +7,10 @@
 // VITE_API_BASE_URL to point to the real ISRO SAC engine FastAPI server.
 // ============================================================================
 
-import { uploadAsset } from '../api/assets';
-import { submitJob, pollJob, getJobTrace } from '../api/jobs';
-import { EngineResult, JobResponse, Modality, Role } from '../types/engine';
+import { EngineResult, Modality, Role } from '../types/engine';
 import { UploadedFileState } from '../types/app';
+import { getApiBaseUrl, isMockMode } from '../api/client';
+import { submitJob, pollJob } from '../api/jobs';
 
 export interface RunAnalysisParams {
   query: string;
@@ -19,13 +19,6 @@ export interface RunAnalysisParams {
   latencyMs?: number;
 }
 
-/**
- * High-level analysis workflow:
- * 1. Upload files if not already uploaded (POST /api/v1/assets/upload)
- * 2. Submit analysis job (POST /api/v1/jobs/submit)
- * 3. Poll until completed or failed (GET /api/v1/jobs/:id/status)
- * 4. Return unified EngineResult
- */
 export async function executeRemoteSensingAnalysis({
   query,
   files,
@@ -39,55 +32,61 @@ export async function executeRemoteSensingAnalysis({
     throw new Error('Please enter a natural language question or select a prompt.');
   }
 
-  onProgress?.('Validating input assets and georeferencing metadata...', 100);
-
-  // 1. Prepare assets payload
-  const assetsPayload = files.map((f, idx) => ({
-    asset_id: f.id || `asset-mock-${idx}`,
-    modality: f.modality || ('optical' as Modality),
-    role: f.role || (idx === 0 ? ('before' as Role) : ('after' as Role)),
-    acquisition_time: f.acquisitionDate,
-  }));
-
-  onProgress?.('Submitting job to SatQuery Agentic Controller...', 300);
-
-  // 2. Submit job (FUTURE: calls real backend POST /api/v1/jobs/submit)
-  const { job_id } = await submitJob({
-    query,
-    assets: assetsPayload,
-  });
-
-  onProgress?.('Agent is selecting specialist model from registry...', 600);
-
-  // 3. Poll job lifecycle (FUTURE: calls real backend GET /api/v1/jobs/:id/status)
-  const startTime = Date.now();
-  const pollIntervalMs = 250;
-  const timeoutMs = 30000;
-
-  while (Date.now() - startTime < timeoutMs) {
-    const elapsed = Date.now() - startTime;
-    if (elapsed > 400) {
-      onProgress?.('Executing remote sensing vision-language pipeline...', elapsed);
-    }
-    if (elapsed > 900) {
-      onProgress?.('Synthesizing evidence overlays and confidence bounds...', elapsed);
-    }
-
-    const jobResponse: JobResponse = await pollJob(job_id, latencyMs);
-
-    if (jobResponse.status === 'completed' && jobResponse.result) {
-      return jobResponse.result;
-    }
-
-    if (jobResponse.status === 'failed') {
-      if (jobResponse.result) {
-        return jobResponse.result;
+  // Preserve existing mock fallback if explicitly configured
+  if (isMockMode()) {
+    onProgress?.('Submitting mock job...', 300);
+    const assetsPayload = files.map((f, idx) => ({
+      asset_id: f.id || `asset-mock-${idx}`,
+      modality: f.modality || ('optical' as Modality),
+      role: f.role || (idx === 0 ? ('before' as Role) : ('after' as Role)),
+      acquisition_time: f.acquisitionDate,
+    }));
+    const { job_id } = await submitJob({ query, assets: assetsPayload });
+    const startTime = Date.now();
+    while (Date.now() - startTime < 30000) {
+      const jobResponse = await pollJob(job_id, latencyMs);
+      if (jobResponse.status === 'completed' && jobResponse.result) return jobResponse.result;
+      if (jobResponse.status === 'failed') {
+        if (jobResponse.result) return jobResponse.result;
+        throw new Error('Engine analysis failed.');
       }
-      throw new Error('Engine analysis failed without returning structured result.');
+      await new Promise((r) => setTimeout(r, 250));
     }
-
-    await new Promise((r) => setTimeout(r, pollIntervalMs));
+    throw new Error('Timeout');
   }
 
-  throw new Error('Analysis request timed out after 30 seconds.');
+  onProgress?.('Preparing synchronous analysis request...', 100);
+
+  const formData = new FormData();
+  formData.append('query', query);
+  
+  files.forEach(f => {
+    if (f.file) {
+      formData.append('files', f.file, f.file.name);
+    }
+  });
+
+  onProgress?.('Uploading files and waiting for engine execution...', 500);
+
+  const baseUrl = getApiBaseUrl();
+  const response = await fetch(`${baseUrl}/analyze`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    let errMsg = `Backend error ${response.status}: ${response.statusText}`;
+    try {
+      const errJson = await response.json();
+      if (errJson.detail) {
+        if (Array.isArray(errJson.detail)) errMsg = errJson.detail.map((e: any) => e.msg).join(', ');
+        else errMsg = errJson.detail;
+      }
+    } catch (e) {}
+    throw new Error(errMsg);
+  }
+
+  onProgress?.('Rendering results...', 1000);
+  const result: EngineResult = await response.json();
+  return result;
 }
