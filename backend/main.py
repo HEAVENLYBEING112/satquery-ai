@@ -46,49 +46,55 @@ async def analyze(
         raise HTTPException(status_code=400, detail="Maximum of 2 images supported")
 
     images = []
-    
-    for upload in files:
-        if not upload.filename:
-            continue
-            
-        ext = Path(upload.filename).suffix.lower()
-        if ext not in [".png", ".jpg", ".jpeg", ".tif", ".tiff"]:
-            raise HTTPException(status_code=400, detail=f"Unsupported file type: {ext}")
-            
-        file_id = str(uuid.uuid4())
-        save_path = UPLOAD_DIR / f"{file_id}_{upload.filename}"
-        
-        with open(save_path, "wb") as buffer:
-            shutil.copyfileobj(upload.file, buffer)
-            
-        # Use RasterLoader to parse metadata and enforce security limits
-        from engine.geospatial.loader import RasterLoader
-        loader = RasterLoader()
-        # The loader will throw RasterLoaderError on corrupt files or oversized dimensions
-        try:
-            asset = loader.load(str(save_path.absolute()), modality_override=None)
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=f"Image validation failed: {str(e)}")
-        
-        # Keep original filename for client reference
-        asset.filename = upload.filename
-        asset.id = file_id
-        images.append(asset)
-        
-    bundle = InputBundle(images=images)
+    written_files = []
     
     try:
-        result = engine.analyze(bundle, query)
-    except Exception as e:
-        # Prevent stack trace and filesystem path leakage
-        print(f"Backend Exception: {str(e)}") # Simple logging
-        raise HTTPException(status_code=500, detail="An unexpected internal server error occurred.")
-    finally:
-        # Cleanup uploaded files safely
-        for img in images:
+        for upload in files:
+            if not upload.filename:
+                continue
+                
+            ext = Path(upload.filename).suffix.lower()
+            if ext not in [".png", ".jpg", ".jpeg", ".tif", ".tiff"]:
+                raise HTTPException(status_code=400, detail=f"Unsupported file type.")
+                
+            file_id = str(uuid.uuid4())
+            save_path = UPLOAD_DIR / f"{file_id}_{upload.filename}"
+            
+            with open(save_path, "wb") as buffer:
+                shutil.copyfileobj(upload.file, buffer)
+            written_files.append(str(save_path.absolute()))
+                
+            # Use RasterLoader to parse metadata and enforce security limits
+            from engine.geospatial.loader import RasterLoader
+            loader = RasterLoader()
+            # The loader will throw RasterLoaderError on corrupt files or oversized dimensions
             try:
-                if os.path.exists(img.path):
-                    os.remove(img.path)
+                asset = loader.load(str(save_path.absolute()), modality_override=None)
+            except Exception as e:
+                import logging
+                logging.error(f"Image validation failed: {str(e)}")
+                raise HTTPException(status_code=400, detail="Image validation failed. The file may be corrupt, unsupported, or excessively large.")
+            
+            # Keep original filename for client reference
+            asset.filename = upload.filename
+            asset.id = file_id
+            images.append(asset)
+            
+        bundle = InputBundle(images=images)
+        
+        try:
+            result = engine.analyze(bundle, query)
+        except Exception as e:
+            # Prevent stack trace and filesystem path leakage
+            import logging
+            logging.error(f"Backend Exception: {str(e)}")
+            raise HTTPException(status_code=500, detail="An unexpected internal server error occurred.")
+    finally:
+        # Cleanup uploaded files safely regardless of where failure occurred
+        for filepath in written_files:
+            try:
+                if os.path.exists(filepath):
+                    os.remove(filepath)
             except Exception:
                 pass
         

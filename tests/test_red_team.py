@@ -7,6 +7,7 @@ from engine.geospatial.modality import detect_modality
 from engine.agent.planner import Planner, PlannerError
 from engine.contracts import InputBundle, ImageAsset
 import numpy as np
+import os
 
 def test_bounding_box_validation():
     # Valid
@@ -23,6 +24,72 @@ def test_bounding_box_validation():
         
     with pytest.raises(ValueError, match="NaN"):
         BoundingBox("invalid", [float('nan'), 0, 10, 10])
+
+def test_oversized_raster(monkeypatch):
+    loader = RasterLoader()
+    # We want to mock rasterio.open to return a fake DatasetReader
+    class MockDataset:
+        def __init__(self, w, h):
+            self.width = w
+            self.height = h
+            self.count = 3
+            self.crs = None
+            self.res = (10, 10)
+            self.bounds = None
+            self.nodata = None
+            self.dtypes = ['uint8']
+            self.transform = None
+        def __enter__(self): return self
+        def __exit__(self, *args): pass
+        
+    def mock_rasterio_open(filepath, *args, **kwargs):
+        # Determine size from filename to test both cases
+        if "huge" in filepath:
+            return MockDataset(10000, 10000)
+        return MockDataset(100, 100)
+        
+    import engine.geospatial.loader
+    # Avoid actual os.path.exists checks
+    monkeypatch.setattr(os.path, "exists", lambda p: True)
+    monkeypatch.setattr(os.path, "splitext", lambda p: (p, ".tif"))
+    import rasterio
+    monkeypatch.setattr(rasterio, "open", mock_rasterio_open)
+    
+    # Test valid
+    asset = loader.load("normal.tif")
+    assert asset.width == 100
+    
+    # Test oversized
+    with pytest.raises(RasterLoaderError, match="10000x10000") as exc_info:
+        loader.load("huge.tif")
+    assert "exceed maximum allowed" in str(exc_info.value)
+
+def test_temp_file_cleanup(monkeypatch, tmp_path):
+    client = TestClient(app)
+    # Upload two files. Make the second one fail validation to ensure both are cleaned up.
+    import backend.main
+    monkeypatch.setattr(backend.main, "UPLOAD_DIR", tmp_path)
+    
+    def mock_load(filepath, **kwargs):
+        if "fail" in filepath:
+            raise Exception("Force fail")
+        return ImageAsset(id="1", path=filepath, filename="test.png", format="PNG", modality="optical")
+        
+    monkeypatch.setattr("engine.geospatial.loader.RasterLoader.load", mock_load)
+    
+    response = client.post(
+        "/analyze", 
+        data={"query": "test"}, 
+        files=[
+            ("files", ("pass.png", b"fake", "image/png")),
+            ("files", ("fail.png", b"fake", "image/png"))
+        ]
+    )
+    
+    assert response.status_code == 400
+    assert "Force fail" not in response.text
+    # Verify both temp files were deleted
+    assert len(list(tmp_path.iterdir())) == 0
 
 def test_modality_spoofing():
     # 3 bands -> Optical even if named SAR
