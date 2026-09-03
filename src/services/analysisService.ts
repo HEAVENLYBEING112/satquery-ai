@@ -60,9 +60,14 @@ export async function executeRemoteSensingAnalysis({
   const formData = new FormData();
   formData.append('query', query);
   
-  files.forEach(f => {
+  files.forEach((f, idx) => {
     if (f.file) {
       formData.append('files', f.file, f.file.name);
+      if (f.modality) {
+        formData.append('modalities', f.modality);
+      } else {
+        formData.append('modalities', '');
+      }
     }
   });
 
