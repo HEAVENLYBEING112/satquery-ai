@@ -15,7 +15,17 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from engine.core import SatQueryEngine
 from engine.contracts import InputBundle, ImageAsset, TaskType, EngineResult, EvidenceBundle, SpecialistResult
 
-app = FastAPI(title="SatQuery Minimal API")
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI(title="SatQuery AI Backend", version="1.0.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # For demo purposes
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Initialize engine globally
 engine = SatQueryEngine()
@@ -38,6 +48,7 @@ def health_check():
 async def analyze(
     query: str = Form(...),
     files: List[UploadFile] = File(...),
+    modalities: List[str] = Form(None),
 ):
     if not files:
         raise HTTPException(status_code=400, detail="Missing image files")
@@ -49,7 +60,7 @@ async def analyze(
     written_files = []
     
     try:
-        for upload in files:
+        for i, upload in enumerate(files):
             if not upload.filename:
                 continue
                 
@@ -69,7 +80,10 @@ async def analyze(
             loader = RasterLoader()
             # The loader will throw RasterLoaderError on corrupt files or oversized dimensions
             try:
-                asset = loader.load(str(save_path.absolute()), modality_override=None)
+                modality_override = None
+                if modalities and i < len(modalities) and modalities[i]:
+                    modality_override = modalities[i].lower()
+                asset = loader.load(str(save_path.absolute()), modality_override=modality_override)
             except Exception as e:
                 import logging
                 logging.error(f"Image validation failed: {str(e)}")
