@@ -139,6 +139,19 @@ class BoundingBox:
     coordinates: List[float]
     confidence: Optional[float] = None
     source: str = "model"
+    
+    def __post_init__(self):
+        import math
+        if len(self.coordinates) != 4:
+            raise ValueError(f"BoundingBox requires exactly 4 coordinates [x1, y1, x2, y2], got {len(self.coordinates)}")
+        for c in self.coordinates:
+            if math.isnan(c) or math.isinf(c):
+                raise ValueError("BoundingBox coordinates cannot be NaN or Infinity.")
+            if c < 0:
+                raise ValueError(f"BoundingBox coordinates cannot be negative: {self.coordinates}")
+        x1, y1, x2, y2 = self.coordinates
+        if x1 > x2 or y1 > y2:
+            raise ValueError(f"Invalid BoundingBox geometry (x1 > x2 or y1 > y2): {self.coordinates}")
 
 @dataclass
 class ChangeMask:

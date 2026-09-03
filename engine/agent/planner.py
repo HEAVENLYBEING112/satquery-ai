@@ -39,44 +39,52 @@ class Planner:
         steps = []
         
         # 1. Routing logic based on query + inputs
-        if inputs.image_count == 1 and not inputs.has_sar:
-            if "chang" in query_lower:
+        import re
+        # Precise temporal intent matching to avoid false positives on 'unchanged', 'strange'
+        is_temp = bool(re.search(r'\b(change|changed|changes|difference|compare|before and after|between these observations)\b', query_lower))
+
+        if inputs.image_count == 1:
+            if inputs.has_sar:
+                raise PlannerError("Single-image SAR tasks are currently unsupported.")
+                
+            if is_temp:
                 raise PlannerError("Temporal queries require 2 images.")
-            elif "sar" in query_lower:
-                raise PlannerError("SAR image required but only optical found.")
-            elif "describe" in query_lower:
+            
+            # Single image tasks (Optical or SAR)
+            if "describe" in query_lower:
                 task = TaskType.SINGLE_IMAGE_CAPTION
-                steps.append(WorkflowStep(tool=task_to_tool[task]))
             elif "highlight" in query_lower or "ground" in query_lower:
                 task = TaskType.SINGLE_IMAGE_GROUNDING
-                steps.append(WorkflowStep(tool=task_to_tool[task]))
-            elif "visible" in query_lower or "what is" in query_lower:
-                task = TaskType.SINGLE_IMAGE_VQA
-                steps.append(WorkflowStep(tool=task_to_tool[task]))
             else:
                 task = TaskType.SINGLE_IMAGE_VQA
-                steps.append(WorkflowStep(tool=task_to_tool[task]))
+            steps.append(WorkflowStep(tool=task_to_tool[task]))
                 
-        elif inputs.image_count == 2 and not inputs.has_sar:
-            if "chang" in query_lower:
-                if "what" in query_lower or "describe" in query_lower:
-                    task = TaskType.TEMPORAL_CHANGE_DESCRIPTION
+        elif inputs.image_count == 2:
+            if inputs.has_optical and inputs.has_sar:
+                # Cross-modal Optical + SAR
+                if "classify" in query_lower or "land-cover" in query_lower or "identify water" in query_lower:
+                    task = TaskType.CROMA_CLASSIFICATION
+                else:
+                    task = TaskType.CROSS_MODAL_OPTICAL_SAR
+                steps.append(WorkflowStep(tool=task_to_tool[task]))
+            else:
+                # Temporal (Optical+Optical or SAR+SAR)
+                if not inputs.has_optical:
+                    # TEMPORAL_SAR is unhandled by the underlying models currently, reject explicitly
+                    raise PlannerError("TEMPORAL_SAR is currently unsupported by the change detector. Please use optical imagery for temporal change.")
+                    
+                if is_temp:
+                    if "what" in query_lower or "describe" in query_lower:
+                        task = TaskType.TEMPORAL_CHANGE_DESCRIPTION
+                        steps.append(WorkflowStep(tool=task_to_tool[TaskType.TEMPORAL_CHANGE_DETECTION]))
+                        steps.append(WorkflowStep(tool=task_to_tool[task]))
+                    else:
+                        task = TaskType.TEMPORAL_CHANGE_DETECTION
+                        steps.append(WorkflowStep(tool=task_to_tool[task]))
+                else:
+                    task = TaskType.TEMPORAL_CHANGE_VQA
                     steps.append(WorkflowStep(tool=task_to_tool[TaskType.TEMPORAL_CHANGE_DETECTION]))
                     steps.append(WorkflowStep(tool=task_to_tool[task]))
-                else:
-                    task = TaskType.TEMPORAL_CHANGE_DETECTION
-                    steps.append(WorkflowStep(tool=task_to_tool[task]))
-            else:
-                task = TaskType.TEMPORAL_CHANGE_VQA
-                steps.append(WorkflowStep(tool=task_to_tool[TaskType.TEMPORAL_CHANGE_DETECTION]))
-                steps.append(WorkflowStep(tool=task_to_tool[task]))
-                
-        if inputs.has_optical and inputs.has_sar:
-            if "classify" in query_lower or "land-cover" in query_lower or "identify water" in query_lower:
-                task = TaskType.CROMA_CLASSIFICATION
-            else:
-                task = TaskType.CROSS_MODAL_OPTICAL_SAR
-            steps.append(WorkflowStep(tool=task_to_tool[task]))
         
         if task is None:
             raise PlannerError("Could not determine a valid task for the given query and inputs.")

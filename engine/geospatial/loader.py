@@ -36,6 +36,10 @@ class RasterLoader:
             
         modality = modality_override or detect_modality(filename, bands, {})
         
+        MAX_DIMENSION = 8192
+        if width > MAX_DIMENSION or height > MAX_DIMENSION:
+            raise RasterLoaderError(f"Image dimensions ({width}x{height}) exceed maximum allowed ({MAX_DIMENSION}x{MAX_DIMENSION}) for hackathon safety.")
+        
         return ImageAsset(
             id=str(uuid.uuid4())[:8],
             path=filepath,
@@ -71,6 +75,10 @@ class RasterLoader:
                 }
                 
                 modality = modality_override or detect_modality(filename, bands, metadata)
+                
+                MAX_DIMENSION = 8192
+                if width > MAX_DIMENSION or height > MAX_DIMENSION:
+                    raise RasterLoaderError(f"GeoTIFF dimensions ({width}x{height}) exceed maximum allowed ({MAX_DIMENSION}x{MAX_DIMENSION}) for hackathon safety.")
                 
                 return ImageAsset(
                     id=str(uuid.uuid4())[:8],

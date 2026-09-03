@@ -41,10 +41,13 @@ class SatQueryEngine:
                 message=str(e)
             )
         except Exception as e:
+            # Log the actual error, but return a safe generic message to avoid leaking paths or secrets
+            import logging
+            logging.error(f"Internal engine error: {str(e)}")
             return self.executor._create_error_result(
                 request_id=request_id,
                 query=query,
                 task=None,
                 code="INTERNAL_ENGINE_ERROR",
-                message=f"An unexpected engine error occurred: {str(e)}"
+                message="An unexpected engine error occurred. Please verify your inputs or contact support."
             )

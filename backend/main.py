@@ -61,19 +61,18 @@ async def analyze(
         with open(save_path, "wb") as buffer:
             shutil.copyfileobj(upload.file, buffer)
             
-        # Basic parsing using rasterio/PIL could be done here,
-        # but the engine handles reading it.
-        # We just need to construct the ImageAsset.
-        format_type = "GeoTIFF" if ext in [".tif", ".tiff"] else "PNG/JPG"
-        modality = get_modality(upload.filename)
+        # Use RasterLoader to parse metadata and enforce security limits
+        from engine.geospatial.loader import RasterLoader
+        loader = RasterLoader()
+        # The loader will throw RasterLoaderError on corrupt files or oversized dimensions
+        try:
+            asset = loader.load(str(save_path.absolute()), modality_override=None)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Image validation failed: {str(e)}")
         
-        asset = ImageAsset(
-            id=file_id,
-            path=str(save_path.absolute()),
-            filename=upload.filename,
-            format=format_type,
-            modality=modality
-        )
+        # Keep original filename for client reference
+        asset.filename = upload.filename
+        asset.id = file_id
         images.append(asset)
         
     bundle = InputBundle(images=images)
@@ -81,8 +80,17 @@ async def analyze(
     try:
         result = engine.analyze(bundle, query)
     except Exception as e:
-        # Engine guarantees structured errors, but just in case
-        raise HTTPException(status_code=500, detail=f"Internal engine error: {str(e)}")
+        # Prevent stack trace and filesystem path leakage
+        print(f"Backend Exception: {str(e)}") # Simple logging
+        raise HTTPException(status_code=500, detail="An unexpected internal server error occurred.")
+    finally:
+        # Cleanup uploaded files safely
+        for img in images:
+            try:
+                if os.path.exists(img.path):
+                    os.remove(img.path)
+            except Exception:
+                pass
         
     # Serialize result preserving all engine information
     
