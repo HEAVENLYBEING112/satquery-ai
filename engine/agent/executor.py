@@ -103,7 +103,7 @@ class WorkflowExecutor:
             else:
                 final_confidence = None
         if not specialist_results and final_confidence == 1.0:
-            final_confidence = 0.0
+            final_confidence = None
 
         return EngineResult(
             request_id=request_id,

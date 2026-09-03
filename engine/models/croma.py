@@ -107,7 +107,7 @@ class CROMASpecialist(SpecialistModel):
                 model_name=self.name,
                 task=TaskType.CROSS_MODAL_OPTICAL_SAR,
                 answer="Failed to align input images.",
-                confidence=0.0,
+                confidence=None,
                 evidence=EvidenceBundle(),
                 execution_time=time.time() - start_time,
                 error=f"Alignment Error: {str(e)}"
@@ -124,7 +124,7 @@ class CROMASpecialist(SpecialistModel):
                 model_name=self.name,
                 task=TaskType.CROSS_MODAL_OPTICAL_SAR,
                 answer="Incompatible optical input.",
-                confidence=0.0,
+                confidence=None,
                 evidence=EvidenceBundle(),
                 execution_time=time.time() - start_time,
                 error=f"CROMA requires exactly 12-band Sentinel-2 input. Found {opt_arr.shape[0]} bands. Will not fabricate missing bands."
@@ -137,7 +137,7 @@ class CROMASpecialist(SpecialistModel):
                 model_name=self.name,
                 task=TaskType.CROSS_MODAL_OPTICAL_SAR,
                 answer="Incompatible SAR input.",
-                confidence=0.0,
+                confidence=None,
                 evidence=EvidenceBundle(),
                 execution_time=time.time() - start_time,
                 error=f"CROMA requires exactly 2-channel Sentinel-1 input (VV/VH). Found {sar_arr.shape[0]} bands."
@@ -197,7 +197,7 @@ class CROMASpecialist(SpecialistModel):
                     model_name=self.name,
                     task=TaskType.CROSS_MODAL_OPTICAL_SAR,
                     answer="Inference failed.",
-                    confidence=0.0,
+                    confidence=None,
                     evidence=EvidenceBundle(),
                     execution_time=time.time() - start_time,
                     error=f"CROMA inference error: {str(e)}"
