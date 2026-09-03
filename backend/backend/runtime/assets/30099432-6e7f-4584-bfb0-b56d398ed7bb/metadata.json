@@ -1,0 +1,1 @@
+{"filename": "file_example_TIFF_1MB.tiff", "storage_filename": "original.tiff", "format": "GeoTIFF", "size_bytes": 1131930, "width": 650, "height": 434, "bands": 4, "crs": null, "resolution": 1.0, "bbox": [0.0, 434.0, 650.0, 0.0], "raw_metadata": {"dtype": "uint8", "nodata": null}}
