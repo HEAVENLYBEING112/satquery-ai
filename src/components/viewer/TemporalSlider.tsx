@@ -1,4 +1,4 @@
-﻿// frontend/src/components/viewer/TemporalSlider.tsx
+// frontend/src/components/viewer/TemporalSlider.tsx
 import React, { useState, useRef, useCallback } from 'react';
 import { ChevronsLeftRight, Calendar } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
@@ -68,12 +68,10 @@ export const TemporalSlider: React.FC<TemporalSliderProps> = ({
 
       {/* Foreground Image: BEFORE (T1) Clipped by swipe position */}
       <div
-        className="absolute inset-0 overflow-hidden"
-        style={{ width: `${temporalSwipePosition}%` }}
+        className="absolute inset-0"
+        style={{ clipPath: `inset(0 ${100 - temporalSwipePosition}% 0 0)` }}
       >
-        <div className="absolute inset-0 w-full h-full" style={{ width: containerRef.current?.offsetWidth || '100%' }}>
-          <img src={beforeUrl} alt="Before satellite observation" className="w-full h-full object-cover" />
-        </div>
+        <img src={beforeUrl} alt="Before satellite observation" className="w-full h-full object-cover" />
         <div className="absolute top-4 left-4 px-3 py-1.5 rounded-lg bg-slate-900/80 backdrop-blur-md border border-sky-500/30 text-sky-300 text-xs font-mono font-semibold flex items-center gap-1.5 shadow-lg">
           <Calendar className="w-3.5 h-3.5 text-sky-400" />
           <span>BEFORE: {beforeDate}</span>

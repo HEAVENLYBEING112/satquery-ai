@@ -1,4 +1,4 @@
-﻿// frontend/src/components/trace/TracePanel.tsx
+// frontend/src/components/trace/TracePanel.tsx
 import React from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { TraceStepItem } from './TraceStepItem';
@@ -12,9 +12,9 @@ export const TracePanel: React.FC = () => {
   const totalDuration = trace.reduce((acc, step) => acc + (step.duration_ms || 0), 0);
 
   return (
-    <div className="fixed bottom-0 inset-x-0 z-40 flex flex-col pointer-events-none">
+    <div className="flex flex-col">
       {/* Toggle button tab */}
-      <div className="flex justify-end px-6 pointer-events-auto">
+      <div className="flex justify-end px-6">
         <button
           onClick={toggleTraceOpen}
           className="flex items-center gap-2 px-4 py-2 rounded-t-xl bg-slate-900 border-t border-x border-slate-700 text-xs font-mono font-semibold text-slate-300 hover:text-cyan-400 hover:bg-slate-800 transition-all shadow-2xl cursor-pointer"
@@ -30,7 +30,7 @@ export const TracePanel: React.FC = () => {
 
       {/* Expandable Drawer */}
       {isTraceOpen && (
-        <div className="bg-slate-950/95 border-t border-slate-800 backdrop-blur-xl shadow-2xl pointer-events-auto max-h-[40vh] overflow-y-auto p-4 sm:p-6 space-y-3">
+        <div className="bg-slate-950/95 border-t border-slate-800 backdrop-blur-xl shadow-2xl max-h-[40vh] overflow-y-auto p-4 sm:p-6 space-y-3">
           <div className="flex items-center justify-between pb-2 border-b border-slate-900 max-w-5xl mx-auto">
             <div className="flex items-center gap-2 font-mono text-xs text-slate-300">
               <Cpu className="w-4 h-4 text-emerald-400" />

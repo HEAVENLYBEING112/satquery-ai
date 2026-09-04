@@ -1,4 +1,4 @@
-﻿// frontend/src/components/layout/AppLayout.tsx
+// frontend/src/components/layout/AppLayout.tsx
 import React from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { AppHeader } from './AppHeader';
@@ -25,13 +25,17 @@ export const AppLayout: React.FC = () => {
       <AppHeader />
       <div className="flex-1 flex overflow-hidden">
         <AppSidebar />
-        <main className="flex-1 flex flex-col overflow-y-auto bg-slate-950/40 relative">
-          <div className="flex-1 p-4 sm:p-6 max-w-[1700px] w-full mx-auto">
-            <Outlet />
-          </div>
+        <div className="flex-1 flex flex-col min-w-0">
+          <main className="flex-1 flex flex-col overflow-y-auto bg-slate-950/40 relative">
+            <div className="flex-1 p-4 sm:p-6 max-w-[1700px] w-full mx-auto">
+              <Outlet />
+            </div>
+          </main>
           {/* Global Collapsible Execution Trace Drawer */}
-          <TracePanel />
-        </main>
+          <div className="relative z-40">
+            <TracePanel />
+          </div>
+        </div>
       </div>
     </div>
   );

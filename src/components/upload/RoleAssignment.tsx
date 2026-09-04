@@ -1,4 +1,4 @@
-﻿// frontend/src/components/upload/RoleAssignment.tsx
+// frontend/src/components/upload/RoleAssignment.tsx
 import React from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { Modality, Role } from '../../types/engine';
@@ -37,7 +37,7 @@ export const RoleAssignment: React.FC = () => {
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+      <div className="space-y-2.5">
         {/* File 1 Assignment */}
         <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800 space-y-2">
           <div className="text-[11px] text-slate-300 font-mono truncate" title={file1.name}>
