@@ -22,30 +22,7 @@ const defaultSettings: UserSettings = {
   showMockBanner: true,
 };
 
-const initialDefaultFiles: UploadedFileState[] = [
-  {
-    file: new File(['mock-optical'], 'cartosat2s_visakhapatnam_optical.tif', { type: 'image/tiff' }),
-    id: 'preset-opt-01',
-    name: 'cartosat2s_visakhapatnam_optical.tif',
-    size: 14200000,
-    type: 'GeoTIFF',
-    previewUrl: SAMPLE_OPTICAL_PORT,
-    modality: 'optical',
-    role: 'before',
-    acquisitionDate: '2024-01-15T09:30:00Z',
-    progress: 100,
-    uploaded: true,
-    metadata: {
-      bands: 4,
-      crs: 'EPSG:32644',
-      resolution: 0.6,
-      width: 600,
-      height: 600,
-      sensor: 'Cartosat-2S PAN/MX',
-      satellite: 'Cartosat-2S',
-    },
-  },
-];
+const initialDefaultFiles: UploadedFileState[] = [];
 
 const loadSavedHistory = (): HistoryRecord[] => {
   try {
@@ -91,7 +68,7 @@ interface AppState {
   removeFile: (id: string) => void;
   updateFileRole: (id: string, role: Role) => void;
   updateFileModality: (id: string, modality: Modality) => void;
-  loadPreset: (preset: SampleDataset) => void;
+  loadPreset: (preset: SampleDataset) => Promise<void>;
   setQuery: (query: string) => void;
   runAnalysis: (customQuery?: string) => Promise<void>;
   resetAnalysis: () => void;
@@ -107,7 +84,7 @@ interface AppState {
 export const useAppStore = create<AppState>((set, get) => ({
   workflowMode: 'single',
   files: initialDefaultFiles,
-  activePresetId: 'isro-cartosat-coastal-port',
+  activePresetId: 'synthetic-coastal-port',
   query: '',
   isAnalyzing: false,
   analysisStepText: '',
@@ -184,20 +161,35 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ files: updated });
   },
 
-  loadPreset: (preset) => {
-    const loadedFiles: UploadedFileState[] = preset.images.map((img, idx) => ({
-      file: new File(['preset-blob'], img.name, { type: 'image/tiff' }),
-      id: `preset-${preset.id}-${idx}`,
-      name: img.name,
-      size: 15400000,
-      type: 'GeoTIFF',
-      previewUrl: img.previewUrl,
-      modality: img.modality,
-      role: img.role || (idx === 0 ? 'before' : 'after'),
-      acquisitionDate: img.acquisitionDate || '2024-01-15',
-      progress: 100,
-      uploaded: true,
-      metadata: img.metadata,
+  loadPreset: async (preset) => {
+    const loadedFiles: UploadedFileState[] = await Promise.all(preset.images.map(async (img, idx) => {
+      let fileData: Blob;
+      if (img.fileUrl) {
+        try {
+          const res = await fetch(img.fileUrl);
+          if (!res.ok) throw new Error('Fetch failed');
+          fileData = await res.blob();
+        } catch (e) {
+          fileData = new Blob(['mock-data'], { type: 'image/tiff' });
+        }
+      } else {
+        fileData = new Blob(['mock-data'], { type: 'image/tiff' });
+      }
+
+      return {
+        file: new File([fileData], img.name, { type: 'image/tiff' }),
+        id: `preset-${preset.id}-${idx}`,
+        name: img.name,
+        size: fileData.size,
+        type: 'GeoTIFF',
+        previewUrl: img.previewUrl,
+        modality: img.modality,
+        role: img.role || (idx === 0 ? 'before' : 'after'),
+        acquisitionDate: img.acquisitionDate || '2024-01-15',
+        progress: 100,
+        uploaded: true,
+        metadata: img.metadata,
+      };
     }));
 
     set({

@@ -1,4 +1,4 @@
-﻿// frontend/src/types/app.ts
+// frontend/src/types/app.ts
 import { EngineResult, JobResponse, Modality, Role, TaskType } from './engine';
 
 export type AppWorkflowMode = 'single' | 'temporal' | 'cross_modal';
@@ -49,6 +49,7 @@ export interface SampleDataset {
   images: Array<{
     name: string;
     previewUrl: string;
+    fileUrl?: string;
     modality: Modality;
     role?: Role;
     acquisitionDate?: string;

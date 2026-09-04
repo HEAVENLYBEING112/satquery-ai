@@ -1,4 +1,4 @@
-﻿// frontend/src/pages/LandingPage.tsx
+// frontend/src/pages/LandingPage.tsx
 import React from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -64,7 +64,7 @@ export const LandingPage: React.FC = () => {
           <div className="flex items-center justify-between pb-3 mb-3 border-b border-white/10 font-mono text-[10px] text-[#A0A0A0]">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-[#22C55E]" />
-              <span className="text-white font-bold">MISSION MONITOR: CARTOSAT-2S / RISAT-1A</span>
+              <span className="text-white font-bold">MISSION MONITOR: SYNTHETIC MOCK-SAT</span>
             </div>
             <div className="text-[#38BDF8]">COORD: 17.7021° N, 83.2245° E</div>
           </div>

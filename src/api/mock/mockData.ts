@@ -34,7 +34,7 @@ export const SAMPLE_OPTICAL_PORT = `data:image/svg+xml;utf8,<svg xmlns="http://w
   <line x1="0" y1="400" x2="600" y2="400" stroke="%2338bdf8" stroke-width="0.5" stroke-dasharray="4,4" opacity="0.4"/>
   <line x1="200" y1="0" x2="200" y2="600" stroke="%2338bdf8" stroke-width="0.5" stroke-dasharray="4,4" opacity="0.4"/>
   <line x1="400" y1="0" x2="400" y2="600" stroke="%2338bdf8" stroke-width="0.5" stroke-dasharray="4,4" opacity="0.4"/>
-  <text x="20" y="40" fill="%2338bdf8" font-family="monospace" font-size="14" font-weight="bold">CARTOSAT-2S OPTICAL RGB (0.6m GSD)</text>
+  <text x="20" y="40" fill="%2338bdf8" font-family="monospace" font-size="14" font-weight="bold">SYNTHETIC MOCK-SAT OPTICAL RGB (10m GSD)</text>
 </svg>`;
 
 export const SAMPLE_SAR_PORT = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">
@@ -57,7 +57,7 @@ export const SAMPLE_SAR_PORT = `data:image/svg+xml;utf8,<svg xmlns="http://www.w
   <circle cx="485" cy="270" r="5" fill="%23e4e4e7"/>
   <circle cx="550" cy="270" r="7" fill="%23ffffff"/>
   <circle cx="515" cy="335" r="8" fill="%23ffffff"/>
-  <text x="20" y="40" fill="%23fbbf24" font-family="monospace" font-size="14" font-weight="bold">RISAT-1A SAR C-BAND (VV/VH BACKSCATTER)</text>
+  <text x="20" y="40" fill="%23fbbf24" font-family="monospace" font-size="14" font-weight="bold">SYNTHETIC MOCK-SAT SAR C-BAND</text>
 </svg>`;
 
 export const SAMPLE_TEMPORAL_T1 = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">
@@ -118,7 +118,7 @@ export const MOCK_VQA_RESULT: EngineResult = {
         change_statistics: null,
         change_mask: null,
         metadata: {
-          sensor: 'Cartosat-2S PAN/MX',
+          sensor: 'Synthetic RGB',
           ground_sample_distance_m: 0.6,
           spectral_bands: ['Red', 'Green', 'Blue', 'NIR'],
         },
@@ -136,7 +136,7 @@ export const MOCK_VQA_RESULT: EngineResult = {
       change_statistics: null,
       change_mask: null,
       metadata: {
-        sensor: 'Cartosat-2S PAN/MX',
+        sensor: 'Synthetic RGB',
         ground_sample_distance_m: 0.6,
       },
     },
@@ -520,15 +520,15 @@ export const MOCK_FAILED_RESULT: EngineResult = {
   ],
 };
 
-// 3. Preset Satellite Datasets for UI Demonstrations
+// // 3. Preset Satellite Datasets for UI Demonstrations
 export const SAMPLE_DATASETS: SampleDataset[] = [
   {
-    id: 'isro-cartosat-coastal-port',
-    title: 'Visakhapatnam Port Infrastructure',
-    subtitle: 'Cartosat-2S High-Resolution Optical & RISAT-1A SAR Pair',
-    description: 'Co-registered 0.6m high-resolution optical imagery paired with all-weather C-band synthetic aperture radar.',
+    id: 'synthetic-coastal-port',
+    title: 'Synthetic Port Infrastructure',
+    subtitle: 'Local Synthetic Optical & SAR Fixture Pair',
+    description: 'Co-registered synthetic optical and SAR test fixtures for zero-budget UI demonstration.',
     mode: 'cross_modal',
-    badge: 'ISRO SAC / Benchmark',
+    badge: 'Demo Fixture',
     recommendedQueries: [
       'Describe the land-cover and major objects visible in this image.',
       'Highlight the cargo vessels and docking piers',
@@ -537,40 +537,43 @@ export const SAMPLE_DATASETS: SampleDataset[] = [
     ],
     images: [
       {
-        name: 'cartosat2s_visakhapatnam_optical.tif',
+        name: 'synthetic_optical.tif',
         previewUrl: SAMPLE_OPTICAL_PORT,
+        fileUrl: '/samples/cartosat_synthetic.tif',
         modality: 'optical',
         metadata: {
-          bands: 4,
-          crs: 'EPSG:32644 (UTM Zone 44N)',
-          resolution: 0.6,
-          width: 600,
-          height: 600,
-          sensor: 'PAN / MX (VNIR)',
-          satellite: 'Cartosat-2S',
+          bands: 3,
+          crs: 'EPSG:32610 (UTM Zone 10N)',
+          resolution: 10.0,
+          width: 256,
+          height: 256,
+          sensor: 'Synthetic RGB',
+          satellite: 'Mock-Sat',
         },
       },
       {
-        name: 'risat1a_visakhapatnam_sar.tif',
+        name: 'synthetic_sar.tif',
         previewUrl: SAMPLE_SAR_PORT,
+        fileUrl: '/samples/risat_synthetic.tif',
         modality: 'sar',
+        role: 'after',
         metadata: {
-          bands: 2,
-          crs: 'EPSG:32644 (UTM Zone 44N)',
-          resolution: 1.25,
-          width: 600,
-          height: 600,
-          sensor: 'C-Band Synthetic Aperture Radar (VV/VH)',
-          satellite: 'RISAT-1A (EOS-04)',
+          bands: 1,
+          crs: 'EPSG:32610 (UTM Zone 10N)',
+          resolution: 10.0,
+          width: 256,
+          height: 256,
+          sensor: 'Synthetic C-Band',
+          satellite: 'Mock-Sat',
         },
       },
     ],
   },
   {
-    id: 'brahmaputra-flood-temporal',
-    title: 'Brahmaputra Flood Plain Change',
-    subtitle: 'Bi-Temporal Sentinel-2 & Cartosat Flood Monitoring',
-    description: 'Multi-date seasonal comparison before and after monsoon flood wave inundation.',
+    id: 'synthetic-flood-temporal',
+    title: 'Synthetic Flood Plain Change',
+    subtitle: 'Bi-Temporal Synthetic Flood Monitoring',
+    description: 'Multi-date seasonal comparison before and after monsoon flood wave inundation (synthetic fixture).',
     mode: 'temporal',
     badge: 'Disaster Management',
     recommendedQueries: [
@@ -581,44 +584,46 @@ export const SAMPLE_DATASETS: SampleDataset[] = [
     ],
     images: [
       {
-        name: 'brahmaputra_basin_2024_01_15_t1.tif',
+        name: 'synthetic_t1.tif',
         previewUrl: SAMPLE_TEMPORAL_T1,
+        fileUrl: '/samples/synthetic_before.tif',
         modality: 'optical',
         role: 'before',
         acquisitionDate: '2024-01-15',
         metadata: {
-          bands: 4,
-          crs: 'EPSG:32646 (UTM Zone 46N)',
+          bands: 3,
+          crs: 'EPSG:32610 (UTM Zone 10N)',
           resolution: 10.0,
-          width: 600,
-          height: 600,
-          sensor: 'MSI Optical Multispectral',
-          satellite: 'Sentinel-2A',
+          width: 256,
+          height: 256,
+          sensor: 'Synthetic Optical',
+          satellite: 'Mock-Sat',
         },
       },
       {
-        name: 'brahmaputra_basin_2024_08_10_t2.tif',
+        name: 'synthetic_t2.tif',
         previewUrl: SAMPLE_TEMPORAL_T2,
+        fileUrl: '/samples/synthetic_after.tif',
         modality: 'optical',
         role: 'after',
         acquisitionDate: '2024-08-10',
         metadata: {
-          bands: 4,
-          crs: 'EPSG:32646 (UTM Zone 46N)',
+          bands: 3,
+          crs: 'EPSG:32610 (UTM Zone 10N)',
           resolution: 10.0,
-          width: 600,
-          height: 600,
-          sensor: 'MSI Optical Multispectral',
-          satellite: 'Sentinel-2B',
+          width: 256,
+          height: 256,
+          sensor: 'Synthetic Optical',
+          satellite: 'Mock-Sat',
         },
       },
     ],
   },
   {
-    id: 'bengaluru-urban-growth',
-    title: 'Bengaluru Urban Growth Corridors',
+    id: 'synthetic-urban-growth',
+    title: 'Synthetic Urban Growth Corridors',
     subtitle: 'Single Optical Scene with High-Density Grounding',
-    description: 'High-density urban area for land use classification, transport network detection, and region grounding.',
+    description: 'High-density urban area for land use classification (synthetic fixture).',
     mode: 'single',
     badge: 'Urban Planning',
     recommendedQueries: [
@@ -629,17 +634,18 @@ export const SAMPLE_DATASETS: SampleDataset[] = [
     ],
     images: [
       {
-        name: 'bengaluru_urban_optical.tif',
+        name: 'synthetic_urban_optical.tif',
         previewUrl: SAMPLE_OPTICAL_PORT,
+        fileUrl: '/samples/cartosat_synthetic.tif',
         modality: 'optical',
         metadata: {
-          bands: 4,
-          crs: 'EPSG:32643 (UTM Zone 43N)',
-          resolution: 0.5,
-          width: 600,
-          height: 600,
-          sensor: 'High-Res Optical MX',
-          satellite: 'Cartosat-3',
+          bands: 3,
+          crs: 'EPSG:32610 (UTM Zone 10N)',
+          resolution: 10.0,
+          width: 256,
+          height: 256,
+          sensor: 'Synthetic Optical',
+          satellite: 'Mock-Sat',
         },
       },
     ],

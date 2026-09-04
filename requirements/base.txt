@@ -3,3 +3,7 @@ numpy
 Pillow
 pyproj
 scipy
+
+fastapi
+python-multipart
+uvicorn

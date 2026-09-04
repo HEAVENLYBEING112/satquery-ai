@@ -1,4 +1,4 @@
-﻿// frontend/src/components/results/ResultsPanel.tsx
+// frontend/src/components/results/ResultsPanel.tsx
 import React from 'react';
 import { EngineResult } from '../../types/engine';
 import { useAppStore } from '../../store/useAppStore';
@@ -47,7 +47,7 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({ result, onNewQuery }
           </span>
           <div className="flex items-center gap-2">
             {taskInfo && (
-              <span className="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider bg-[#111111] text-[#38BDF8] border border-sky-400/30">
+              <span data-testid="task-badge" className="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider bg-[#111111] text-[#38BDF8] border border-sky-400/30">
                 {taskInfo.title}
               </span>
             )}

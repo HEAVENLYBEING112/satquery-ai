@@ -1,4 +1,4 @@
-﻿// frontend/src/pages/SingleImagePage.tsx
+// frontend/src/pages/SingleImagePage.tsx
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { ImageViewer } from '../components/viewer/ImageViewer';
@@ -114,6 +114,10 @@ export const SingleImagePage: React.FC = () => {
 
             {activeTask === 'caption' && (
               <div className="space-y-3">
+                <div className="flex items-center gap-2 text-xs font-bold text-white uppercase tracking-wider">
+                  <FileText className="w-4 h-4 text-[#38BDF8]" />
+                  <span>SCENE DESCRIPTION</span>
+                </div>
                 <p className="text-xs text-[#A0A0A0] leading-relaxed">
                   Synthesize an exhaustive technical description analyzing optical reflectance, land cover classification, and structural characteristics.
                 </p>
@@ -132,9 +136,10 @@ export const SingleImagePage: React.FC = () => {
 
             {activeTask === 'grounding' && (
               <div className="space-y-3">
-                <label className="text-xs font-bold text-white uppercase tracking-wider">
-                  GROUNDING QUERY:
-                </label>
+                <div className="flex items-center gap-2 text-xs font-bold text-white uppercase tracking-wider">
+                  <Crosshair className="w-4 h-4 text-[#38BDF8]" />
+                  <span>REGION GROUNDING</span>
+                </div>
                 <input
                   type="text"
                   value={groundQuery}
@@ -156,6 +161,9 @@ export const SingleImagePage: React.FC = () => {
             )}
           </Card>
 
+          <div className="text-xs text-[#A0A0A0] flex justify-between items-center mb-1">
+            <span>Or test with a preset below. To upload your own imagery, go to the <a href="/#/workspace" className="text-sky-400 underline font-bold">AI Workspace</a>.</span>
+          </div>
           <SamplePresets />
         </div>
 

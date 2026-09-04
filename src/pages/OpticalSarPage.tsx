@@ -1,4 +1,4 @@
-﻿// frontend/src/pages/OpticalSarPage.tsx
+// frontend/src/pages/OpticalSarPage.tsx
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { ImageViewer } from '../components/viewer/ImageViewer';
@@ -18,8 +18,8 @@ export const OpticalSarPage: React.FC = () => {
   };
 
   const handleLoadCartosatRisat = () => {
-    const preset = SAMPLE_DATASETS.find((d) => d.id === 'isro-cartosat-coastal-port');
-    if (preset) loadPreset(preset);
+    const preset = SAMPLE_DATASETS.find((d) => d.id === 'synthetic-coastal-port');
+    if (preset) void loadPreset(preset);
   };
 
   return (
@@ -40,7 +40,7 @@ export const OpticalSarPage: React.FC = () => {
         </div>
 
         <Button size="sm" variant="secondary" onClick={handleLoadCartosatRisat} icon={<Radio className="w-3.5 h-3.5 text-[#38BDF8]" />}>
-          LOAD CARTOSAT-2S & RISAT-1A PAIR
+          LOAD SYNTHETIC OPTICAL/SAR PAIR
         </Button>
       </div>
 

@@ -1,4 +1,4 @@
-﻿// frontend/src/pages/ChangeDetectionPage.tsx
+// frontend/src/pages/ChangeDetectionPage.tsx
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { ImageViewer } from '../components/viewer/ImageViewer';
@@ -25,8 +25,8 @@ export const ChangeDetectionPage: React.FC = () => {
   };
 
   const handleLoadBrahmaputra = () => {
-    const preset = SAMPLE_DATASETS.find((d) => d.id === 'brahmaputra-flood-temporal');
-    if (preset) loadPreset(preset);
+    const preset = SAMPLE_DATASETS.find((d) => d.id === 'synthetic-flood-temporal');
+    if (preset) void loadPreset(preset);
   };
 
   return (
@@ -47,7 +47,7 @@ export const ChangeDetectionPage: React.FC = () => {
         </div>
 
         <Button size="sm" variant="secondary" onClick={handleLoadBrahmaputra} icon={<Calendar className="w-3.5 h-3.5 text-[#38BDF8]" />}>
-          LOAD T1/T2 FLOOD MONITORING PAIR
+          LOAD SYNTHETIC FLOOD MONITORING PAIR
         </Button>
       </div>
 
