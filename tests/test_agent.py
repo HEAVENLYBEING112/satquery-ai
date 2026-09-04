@@ -61,9 +61,9 @@ def test_planner_optical_sar(opt_img, sar_img):
     assert plan.task == TaskType.CROSS_MODAL_OPTICAL_SAR
 
 def test_registry():
-    model = registry.get("MockVQA")
-    assert model.name == "MockVQA"
-    assert "MockVQA" in registry.list()
+    model = registry.get("mock_vqa")
+    assert model.name == "mock_vqa"
+    assert "mock_vqa" in registry.list()
 
 def test_plan_validation(opt_img, opt_img2, sar_img):
     validator = PlanValidator()
@@ -73,7 +73,7 @@ def test_plan_validation(opt_img, opt_img2, sar_img):
         task=TaskType.TEMPORAL_CHANGE_DETECTION,
         input_type=InputType.TEMPORAL_OPTICAL,
         input_ids=["1", "2"],
-        steps=[WorkflowStep(tool="MockChangeDetector")]
+        steps=[WorkflowStep(tool="baseline_change_detector")]
     )
     assert validator.validate(plan, InputBundle(images=[opt_img, opt_img2]))
     
@@ -86,7 +86,7 @@ def test_plan_validation(opt_img, opt_img2, sar_img):
         task=TaskType.CROSS_MODAL_OPTICAL_SAR,
         input_type=InputType.OPTICAL_SAR_PAIR,
         input_ids=["1", "2"],
-        steps=[WorkflowStep(tool="MockOpticalSAR")]
+        steps=[WorkflowStep(tool="optical_sar_specialist")]
     )
     with pytest.raises(ValidationError):
         validator.validate(plan_fusion, InputBundle(images=[opt_img, opt_img2]))

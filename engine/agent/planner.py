@@ -24,9 +24,9 @@ class Planner:
             }
         else:
             task_to_tool = {
-                TaskType.SINGLE_IMAGE_VQA: "MockVQA",
-                TaskType.SINGLE_IMAGE_CAPTION: "MockCaptioner",
-                TaskType.SINGLE_IMAGE_GROUNDING: "MockGrounding",
+                TaskType.SINGLE_IMAGE_VQA: "mock_vqa",
+                TaskType.SINGLE_IMAGE_CAPTION: "mock_captioner",
+                TaskType.SINGLE_IMAGE_GROUNDING: "mock_grounding",
                 TaskType.TEMPORAL_CHANGE_DETECTION: "baseline_change_detector",
                 TaskType.TEMPORAL_CHANGE_DESCRIPTION: "temporal_change_summarizer",
                 TaskType.TEMPORAL_CHANGE_VQA: "mock_change_vqa",
