@@ -1,15 +1,15 @@
-# SATQUERY AI — DEMO CHECKLIST
+# SATQUERY AI â€” DEMO CHECKLIST
 
 ## Prerequisites
 1. **Start Backend**: Run the FastAPI server locally from the project root.
    \\\ash
-   $env:PYTHONPATH="."; python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
+   $env:PYTHONPATH="."; python -m uvicorn backend.main:app --host 127.0.0.1 --port 8001
    \\\
 2. **Start Frontend**: Run the React frontend locally.
    \\\ash
    npm run dev
    \\\
-3. **Optional GeoChat Worker**: Ensure the Lightning T4 worker is active if running real VQA inference, and set \VITE_USE_MOCK=false\ in your \.env\.
+3. **GeoChat Worker**: Ensure the Lightning T4 worker is active if running real VQA inference, and set \VITE_USE_MOCK=false\ in your \.env\.
 
 ## 1. Single-Image VQA Demo
 - [ ] Upload a single optical image.
